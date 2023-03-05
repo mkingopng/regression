@@ -1,7 +1,6 @@
 # Regression analysis for Data Scientists
 
 ## Timetable
-
 * Lecture 1: Mondays 3-5pm
 * Lecture 2: Tuesdays 3-5pm
 
