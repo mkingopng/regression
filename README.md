@@ -1,5 +1,10 @@
 # Regression analysis for Data Scientists
 
+## Timetable
+
+* Lecture 1: Mondays 3-5pm
+* Lecture 2: Tuesdays 3-5pm
+
 ## Assessment
 **No.1: Quiz 25%**
 * Part a - Week 2, 13th march Monday 5pm
