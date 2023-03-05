@@ -8,6 +8,7 @@
 \usepackage{amsmath}
 \usepackage{blindtext}
 \usepackage{amsfonts}
+\usepackage{graphicx}
 
 % Document
 \title{Sections and Chapters}
@@ -37,29 +38,75 @@ Response and explanatory variables are measures on one of the following scales:
 \item \textbf{ordinal}: when $Y$ is recorded in classes
 \item \textbf{continuous}: when $Y$ is measured on a continuous scale, at least in theory.
 \end{itemize}
-Nominal and ordinal data are discrete variables and can be qualitative or quantitative (eg \text{counts}).
-Continuous data are quantitative.
+Nominal and ordinal data are discrete variables and can be \underline{qualitative} or \underline{quantitative} (eg \text{counts}).
+Continuous data are \underline{quantitative}.
 $x$ can also be quantitative or qualitative.
-In particular, when the explanatory variable is qualitative, it is often called factor.
-A quantitative explanatory variables is called covariate.
-
+In particular, when the explanatory variable is \underline{qualitative}, it is often called factor.
+A quantitative explanatory variables is called \underline{covariate}.
 \blindtext
 
 \section{Regression}\label{sec:Regression}
-
-
+We aim to find a ``good'' functional relationship of the form $Y=f(x)+\epsilon Y = f(x) + \epsilon$, where $\epsilon$ is a random error term independent of $x$ with mean zero.
+\includegraphics{figure-1-1-1}
 \blindtext
 
 \section{applied regression analysis}\label{sec:applied regression analysis}
-
+\textbold{Applied} means: \underline{``If there is no way to calculate it, we won't talk about it.''}
+On the other hand, we want to understand the underlying computational methods and algorithms.
+This will be impossible without understanding the theory.
+\underline{``There is nothing more practical than a good theory.''}
+— Kurt Lewin
 \blindtext
 
 \section{General Framework of statistical learning}\label{sec:General-framework-of-statistical-learning}
+Statistical learning refers to a vast set of tools for understanding data.
+It splits into supervised and unsupervised methods.
+All the methods presented in this course are within the framework of supervised learning.
+Regression fits into the framework of supervised methods, which requires a statistical model for predicting or estimating an output based on one or more inputs.
 
+In contrast, unsupervised methods cover situations where there are inputs but no supervising output.
+In these type of analysis we learn about relationships and structure of data.
+Example of unsupervised analysis is cluster analysis.
 \blindtext
 
 \section{Knowledge Assumed}\label{sec:Knowledge-Assumed}
+Knowledge assumed
 
+You need to have a fairly good understanding of linear algebra:
+\begin{list}
+    \item vector spaces,
+    \item linear independence,
+    \item matrix multiplication,
+    \item diagonalisation,
+    \item projections,
+    \item \ldots
+\end{list}
+
+Need to know multivariate calculus:
+\begin{list}
+    \item partial derivatives,
+    \item critical points,
+    \item integrals,
+    \item \ldots
+\end{list}
+
+It's also good to have some previous exposure to computational software (RR):
+\begin{list}
+    \item data types,
+    \item manipulation of arrays,
+    \item some idea of optimisation,
+    \item \ldots
+\end{list}
+
+And finally, you need to know some probability theory and statistics:
+\begin{list}
+    \item important distributions (normal, Poisson, …),
+    \item conditional probability,
+    \item conditional expectation,
+    \item covariance matrix,
+    \item asymptotic normality of maximum likelihood estimators,
+    \item \ldots
+\end{list}
 \blindtext
 
 \end{document}
