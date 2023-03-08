@@ -6,8 +6,8 @@
 
 ## Assessment
 **No.1: Quiz 25%**
-* Part a - Week 2, 13th march Monday 5pm
-* Part B - Week 3, 20 March, Monda5 5pm
+* Part a - Week 2, 13th march Monday 4pm
+* Part B - Week 3, 20 March, Monday 4pm
 
 **No. 2: Quiz 30%**
 * part a - Part a - Week 4, 27 Mar, Monday 5pm
