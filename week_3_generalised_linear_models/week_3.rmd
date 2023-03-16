@@ -1,0 +1,633 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+# logistic regression
+```{r}
+library(ISLR)
+data("Default")
+attach(Default)
+
+default.bin <- rep(0, length(default)) # initialise binary vector
+default.bin[default=="Yes"] <- 1
+
+par(mfrow=c(1,2)) # To put the plots next to each other
+
+# Linear model
+lm <- lm(default.bin ~ balance)
+plot(balance, default.bin, pch=3, col="orange",
+     xlab="Balance", ylab="Probability of Default")
+abline(h=c(0,1), lty=2)
+abline(a=lm$coefficients[1], b=lm$coefficients[2], col="blue", lwd=3)
+# Logistic model
+log <- glm(default.bin ~ balance, family="binomial")
+o <- order(balance)
+
+plot(balance, default.bin, pch=3, col="orange", xlab="Balance",
+     ylab="Probability of Default")
+abline(h=c(0,1), lty=2)
+lines(balance[o], log$fitted.values[o], col="blue", lwd=3)
+```
+
+example
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+plot(wage, union.member, main="Trade Union Dataset", pch=3,
+     ylab="Union Membership", xlab="Wage", col="orange")
+abline(h=c(0,1), lty=2)
+```
+
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.glm <- glm(union.member ~ wage, family="binomial")
+o <- order(wage)
+
+plot(wage, union.member, main="Trade Union Dataset", pch=3,
+     ylab="Union Membership", xlab="Wage", col="orange")
+abline(h=c(0,1), lty=2)
+lines(wage[o], union.wage.glm$fitted.values[o], col="blue", lwd=3)
+
+summary(union.wage.glm)
+```
+
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+plot(jitter(age), union.member, main="Trade Union Dataset",
+     col="orange", pch=3, ylab="Union Membership", xlab="Age")
+abline(h=c(0,1), lty=2)
+```
+
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.age.glm <- glm(union.member ~ age, family="binomial")
+o <- order(age)
+
+plot(jitter(age), union.member, main="Trade Union Dataset", pch=3,
+     ylab="Union Membership", xlab="Wage", col="orange")
+abline(h=c(0,1), lty=2)
+lines(age[o], union.age.glm$fitted.values[o], col="blue", lwd=3)
+
+summary(union.age.glm)
+```
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+summary(union.wage.age.glm)
+```
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+
+p_pred <- exp( sum(union.wage.age.glm$coefficients * c(1,6.5,56))) /
+          (1+exp( sum(union.wage.age.glm$coefficients * c(1,6.5,56))))
+p_pred
+```
+
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+
+d0 <- union.wage.age.glm$null.deviance
+d1 <- union.wage.age.glm$deviance
+
+alpha <- 0.05
+
+crit.val <- qchisq(1-alpha, df=2)
+if(d0-d1 > crit.val){
+  cat("We reject H0 at alpha=", alpha, "significance level.")
+}else{
+  cat("We cannot reject H0 at alpha=", alpha, "significance level.")
+}
+```
+
+
+# Homer Lemeshow Statistic
+```{r}
+library(SemiPar)
+library(doBy)
+
+data("trade.union")
+attach(trade.union)
+
+uniongrp <- summaryBy(union.member ~ wage, data=trade.union ,
+                      FUN=c(sum, length))
+names(uniongrp) = c("x","y","n")
+head(uniongrp)
+
+union.grp.glm <- glm(cbind(uniongrp$y, uniongrp$n-uniongrp$y) ~ uniongrp$x,
+                     family=binomial)
+summary(union.grp.glm)
+```
+
+
+# likelihood ratio, pseudo R^2, AIC and BIC
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+
+# Minimal model
+union0.glm <- glm(union.member ~ 1, family=binomial)
+
+Cstat <- 2*(logLik(union.wage.age.glm) - logLik(union0.glm))
+alpha <- 0.05
+p <- length(union.wage.age.glm$coefficients)
+
+if(Cstat[1] > qchisq(1-alpha,p-1)){
+  cat("We reject H0 at alpha=", alpha, "significance level.")
+}else{
+  cat("We cannot reject H0 at alpha=", alpha, "significance level.")
+}
+```
+
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+
+# Minimal model
+union0.glm <- glm(union.member ~ 1, family=binomial)
+
+R2 <- (logLik(union0.glm) - logLik(union.wage.age.glm)) / logLik(union0.glm)
+R2
+```
+
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.glm <- glm(union.member ~ wage, family="binomial")
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+
+# Minimal model
+union0.glm <- glm(union.member ~ 1, family=binomial)
+
+BIC(union0.glm)
+AIC(union0.glm)
+
+BIC(union.wage.glm)
+AIC(union.wage.glm)
+
+BIC(union.wage.age.glm)
+AIC(union.wage.age.glm)
+```
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+
+pr <- residuals(union.wage.age.glm,type="pearson")
+prss <- sum(pr^2)
+prss
+```
+
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+union.wage.age.glm$deviance
+```
+
+
+```{r}
+library(SemiPar)
+
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+
+pr <- residuals(union.wage.age.glm,type="pearson")
+
+# Prediciton
+pred.memb <- predict(union.wage.age.glm)
+pred.memb <- exp(pred.memb ) / (1+exp(pred.memb )) # original scale
+
+plot(pred.memb, pr, col=c("red","blue")[1+union.member],
+     xlab="Prediction", ylab="Residuals")
+abline(h=0,lty=2,col="grey", lwd=2)
+ss <- smooth.spline(pred.memb, pr)
+lines(ss, lwd=2)
+```
+
+# activity:
+Senility and WAIS (Dobson & Barnett, Section 7.8)
+
+A sample of N=54N=54 elderly people was given a psychiatric examination to determine whether symptoms of senility were present. Other measurements taken at the same time included the score on a subset of the Wechsler Adult Intelligence Scale (WAIS).The data are binary although some people have the same WAIS scores so there are m=17m=17 different covariate patterns. Let YiYi​ denote the number of people with symptoms among nini​ people with the ii-th covariate pattern.  The dataset is available in the dobsondobson package in RR under senilitysenility.
+
+    Group the observations per covariate patterns (m=17m=17) and fit the regression model :
+    log⁡(πi1−πi)=β1+β2xi,
+
+
+log⁡(πi1−πi)=β1+β2xi,
+log(1−πi​πi​​)=β1​+β2​xi​,
+where Yi∼Bin(ni,πi),i=1,…,mYi​∼Bin(ni​,πi​),i=1,…,m. Write some RR code to compute the estimated regression coefficients, their standard errors.
+
+Compute the Pearson χ2χ2 statistic and the deviance and test if the model fits well according to those statistics
+
+Reproduce Table 7.9 from Dobson & Barnett (2018, p.169)
+
+Display the standardised residuals (Pearson and Deviance) as function of the WAIS score. What conclusion can you make?
+
+Conduct some research to learn how to use the RR package ResourceSelectionResourceSelection in order to compute the Hosmer-Lemeshow statistic for a g×2g×2 contingency table, with g=3g=3. Display the observed and expected frequencies to match Table 7.10 (Dobson & Barnett (2018, p.170). What is the value of the statistic and its sampling distribution. What conclusions can be drawn?
+
+
+```{r}
+
+```
+
+
+# Solution
+A sample of N=54 elderly people was given a psychiatric examination to determine whether symptoms of senility were present. Other measurements taken at the same time included the score on a subset of the Wechsler Adult Intelligence Scale (WAIS).The data are binary although some people have the same WAIS scores so there are m=17m=17 different covariate patterns. Let Y_i denote the number of people with symptoms among n_i people with the ii-th covariate pattern.  The dataset is available in the dobsondobson package in RR under senilitysenility.
+
+Question 1
+
+Group the observations per covariate patterns (m=17m=17) and fit the regression model :
+log⁡(πi1−πi)=β1+β2xi,
+log(1−πi​πi​​)=β1​+β2​xi​,
+where Yi∼Bin(ni,πi),i=1,…,mYi​∼Bin(ni​,πi​),i=1,…,m. Write some RR code to compute the estimated regression coefficients, their standard errors.
+
+# question 1 solution
+```{r}
+library(dobson)
+library(doBy)
+sen.grp <- summaryBy(s~x, data=senility, FUN=c(sum, length))
+names(sen.grp) <- c("x","y","n")
+
+senility.grp <- glm(cbind(y, n - y) ~ x, data=sen.grp, family=binomial)
+
+senility.grp.sum <- summary(senility.grp)
+senility.grp.sum$coefficients
+#                 Estimate Std. Error   z value    Pr(>|z|)
+# (Intercept)    2.4040433  1.1918351  2.017094 0.043685710
+# senilitygrp$x -0.3235304  0.1139798 -2.838489 0.004532762
+
+```
+
+# question 2 solution
+
+```{r}
+crit.val <- qchisq(0.95, df=nrow(sen.grp)-2)
+
+# Pearson chi^2 statistic:
+P.res <- residuals(senility.grp, type = "pearson")
+if(sum(P.res^2) > crit.val){
+  cat("We reject the null hypothesis that the model is correct")
+}else{
+  cat("We cannot reject the null hypothesis that the model is correct")
+}
+# We cannot reject the null hypothesis that the model is correct
+
+# Deviance statistic:
+D.res <- residuals(senility.grp, type = "deviance")
+if(sum(D.res^2) > crit.val){
+  cat("We reject the null hypothesis that the model is correct")
+}else{
+  cat("We cannot reject the null hypothesis that the model is correct")
+}
+# We cannot reject the null hypothesis that the model is correct
+
+# Alternative to obtain the deviance:
+# senility.grp.sum$deviance
+
+```
+
+# Question 3
+Reproduce Table 7.9 from Dobson & Barnett (2018, p.169).
+
+# solution
+```{r}
+cbind(sen.grp, senility.grp$fitted.values, P.res, D.res)
+```
+
+# Question 4:
+Display the standardised residuals (Pearson and Deviance) as function of the WAIS score. What conclusion can you make?
+
+```{r}
+stanresPearson <- P.res/sqrt(1-hatvalues(senility.grp))
+stanresDeviance <- D.res/sqrt(1-hatvalues(senility.grp))
+# Alternative for diagonal elements of hat matrix:
+# influence(senility.grp)$hat
+
+plot(sen.grp$x,stanresDeviance, ylab="Standardized Deviance Residuals",
+     xlab="WAIS score", ylim=c(-2,2))
+plot(sen.grp$x,stanresPearson, ylab="Standardized Pearson Residuals",
+     xlab="WAIS score", ylim=c(-2,2))
+```
+
+
+# Question 5
+Conduct some research to learn how to use the RR package ResourceSelectionResourceSelection in order to compute the Hosmer-Lemeshow statistic for a g×2g×2 contingency table, with g=3g=3. Display the observed and expected frequencies to match Table 7.10 (Dobson & Barnett (2018, p.170). What is the value of the statistic and its sampling distribution. What conclusions can be drawn?
+
+# solution
+```{r}
+library(ResourceSelection)
+res.glm <- glm(s~x, data=senility, family="binomial")
+h <- hoslem.test(s,fitted(res.glm),g=3)
+h$expected
+# cutyhat             yhat0     yhat1
+#   [0.0168,0.13] 16.664593  1.335407
+#   (0.13,0.303]  15.520921  4.479079
+#   (0.303,0.752]  7.814486  8.185514
+h$observed
+# cutyhat         y0 y1
+#   [0.0168,0.13] 16  2
+#   (0.13,0.303]  17  3
+#   (0.303,0.752]  7  9
+h$statistic
+# X-squared
+#   1.15256
+h$p.value
+# [1] 0.2830139
+```
+
+The p-value is above α=0.05α=0.05, so at the 5%5% level of significance the null hypothesis that the observed and expected proportions are the same across all doses cannot be rejected (evidence of a good fit from the model).
+
+
+# 3.1 the data
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+plot(x, y, pch=16, xaxt="n", xlim=c(-1, 1), ylim=c(0, 15), xlab="X", ylab="Y")
+axis(1, at=c(-1, 0, 1))
+```
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+# Iterative Least Squares procedure
+ILS <- function(niter, b, x, y){
+
+  N <- length(y)
+  y <- z <- as.matrix(y)
+  X <- matrix( c( rep(1,N), x ), N, 2)
+  bs <- matrix(nrow=niter, ncol=2)
+
+  for(i in 1:niter){
+    w <- 1/(b[1] + b[2]*x)
+    W <- diag(w, N, N)
+    b <- bs[i, ] <- solve( t(X) %*% W %*% X) %*% t(X) %*% W %*% z
+  }
+  inv.inform <- solve(t(X) %*% W %*% X)
+
+  return(list(bs=bs, inv.inform=inv.inform, sd=sqrt(diag(inv.inform))) )
+}
+
+est <- ILS(5, b=c(7,5), x=x, y=y )
+est
+```
+
+
+```{r}
+ILS <- function(niter, b, x, y){
+
+  N <- length(y)
+  y <- z <- as.matrix(y)
+  X <- matrix( c( rep(1,N), x ), N, 2)
+  bs <- matrix(nrow=niter, ncol=2)
+
+  for(i in 1:niter){
+    w <- 1/(b[1] + b[2]*x)
+    W <- diag(w, N, N)
+    b <- bs[i, ] <- solve( t(X) %*% W %*% X) %*% t(X) %*% W %*% z
+  }
+  inv.inform <- solve(t(X) %*% W %*% X)
+
+  return(list(bs=bs, inv.inform=inv.inform, sd=sqrt(diag(inv.inform))) )
+}
+
+est <- ILS(5, b=c(7,5), x=x, y=y )
+
+UCI <- tail(est$bs,1) + qnorm(0.975)*est$sd
+LCI <- tail(est$bs,1) - qnorm(0.975)*est$sd
+
+LCI
+UCI
+```
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+res.p <- glm(y ~ x , family=poisson(link="identity"),data=poisson)
+summary(res.p)
+```
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+res.p <- glm(y ~ x , family=poisson(),data=poisson)
+summary(res.p)
+```
+
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+res.p <- glm(y ~ x , family=poisson(),data=poisson)
+
+fit_p <- fitted(res.p)
+pearRes <- c(y - fit_p) / sqrt(fit_p)
+pearRes
+```
+
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+res.p <- glm(y ~ x , family=poisson(),data=poisson)
+
+fit_p <- fitted(res.p)
+pearRes <- c(y - fit_p) / sqrt(fit_p)
+
+chisq <- sum(pearRes^2)
+chisq
+```
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+res.p <- glm(y ~ x , family=poisson(),data=poisson)
+
+fit_p <- fitted(res.p)
+
+devRes <- sign(y - fit_p) * sqrt(2*(y * log(y/fit_p) - (y - fit_p)))
+Dstat <- sum(devRes^2)
+Dstat
+```
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+qchisq(0.95,nrow(poisson)-2)
+```
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+res.p <- glm(y ~ x , family=poisson(),data=poisson)
+res.0 <- glm(y ~ 1 , family=poisson(),data=poisson)
+
+delta.D <- 2*(logLik(res.p) - logLik(res.0))
+delta.D
+# 'log Lik.' 15.48186 (df=2)
+if(delta.D>qchisq(0.95, df=1)){
+  cat("There is evidence against H0")
+}else{
+  cat("There is not enough evidence against H0")
+}
+# There is evidence against H0
+```
+
+
+
+```{r}
+library(dobson)
+data("poisson")
+attach(poisson)
+
+res.p <- glm(y ~ x , family=poisson(),data=poisson)
+res.0 <- glm(y ~ 1 , family=poisson(),data=poisson)
+
+pseudoR2 <- (logLik(res.0) - logLik(res.p)) / logLik(res.0)
+pseudoR2
+```
+
+# the saturated model
+
+```{r}
+library(dobson)
+
+data("melanoma")
+
+ressat.melanoma <- glm(frequency ~ site*type, family=poisson(), data=melanoma)
+summary(ressat.melanoma)
+```
+
+
+# the models with no interactions
+
+```{r}
+library(dobson)
+
+data("melanoma")
+
+resadd.melanoma <- glm(frequency ~ site + type, family=poisson(), data=melanoma)
+summary(resadd.melanoma)
+```
+
+# the minimal model
+
+```{r}
+library(dobson)
+
+data("melanoma")
+
+resmin.melanoma <- glm(frequency ~ 1, family=poisson(), data=melanoma)
+summary(resmin.melanoma)
+```
+
+
+#
+
+```{r}
+
+```
+
+
+
+
+
+
+
