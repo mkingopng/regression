@@ -1,0 +1,443 @@
+---
+title: "R Notebook"
+output: html_document
+---
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+# 2.2: activity in R: Multiple Linear Regression in R
+The basketball data frame contains for a number of NBA basketball players the variables PPM, APM, Height, MPG, Age and Name as displayed below.
+
+```{r}
+basketball<-read.table("../basketball.txt", header=TRUE)
+t(head(basketball))
+attach(basketball)
+```
+
+a) We use the function `glm()` to fit the multiple linear regression with the PPM as the response variable and Height, APM, MPG and Age as predictors.
+
+```{r}
+basketball.glm<-glm(PPM~Height+APM+MPG+Age, family=gaussian)
+summary(basketball.glm)
+```
+
+We also use the function `lm()` to fit the multiple linear regression with the PPM as the response variable and Heigh, APM, MPG and Age as predictors.
+
+```{r}
+basketball.lm<-lm(PPM~Height+APM+MPG+Age)
+summary(basketball.lm)
+```
+
+The `lm()` function returns the F-statistic and R-squared rather than the null and residual deviance statistics.
+
+b) The regression equation is:
+
+$$P \hat{P}M_{i} = 0.221 + 0.00053 \times \text{Height}_{i} - 0.54912 \times MPG_{i} - 0.000522 \times \text{Age}_{i}$$
+
+From the output we can conclude that the estimated coefficients corresponding to APM and MPG are statistically significant at the significance level of α=0.05. Otherwise, the p-values for the rest of the coefficients are greater than 0.05
+
+c) We do not agree with the friend's statement. In the Linear Gaussian Model, the coefficient corresponding to MPG is the partial effect of MPG on the response variable PPM holding the rest of the predictors fixed.
+
+Therefore, by holding the predictors Height, Age and APM fixed, an extra minute played by a player per game is predicted to increase the player's PPM statistic because the estimated coefficient of MPGMPG is positive (0.0077781).
+
+In practice, other variables are influencing PPMPPM, and there is no reason to believe that giving the player more time to play in each game will improve the performance of the player and his ability to attain points per minute.
+
+# full code
+```{r}
+basketball<-read.table("../basketball.txt", header=TRUE)
+t(head(basketball))
+attach(basketball)
+
+basketball.glm<-glm(PPM~Height+APM+MPG+Age, family=gaussian)
+summary(basketball.glm)
+
+basketball.lm<-lm(PPM~Height+APM+MPG+Age)
+summary(basketball.lm)
+```
+
+# 3.1 standardised residuals
+Here, the diagonal of the hat matrix may be calculated in R as below with 2 options.
+```{r}
+mitsub <- read.table('../mitsub.txt', header=T)
+attach(mitsub)
+mitsub.fit <- glm(formula = price ~ age, family = gaussian())
+X <- model.matrix(mitsub.fit)
+
+# option 1
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+diag(H)
+
+# option 2
+hat(X)
+```
+
+To plot the standardised residuals, execute the following R code:
+
+```{r}
+mitsub <- read.table('../mitsub.txt', header=T)
+attach(mitsub)
+mitsub.fit <- glm(formula = price ~ age, family = gaussian())
+X <- model.matrix(mitsub.fit)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+
+r <- mitsub.fit$residuals
+sigmahat <- sqrt(sum(r^2)/mitsub.fit$df.residual)
+r0 <- r/(sigmahat*sqrt(1-diag(H)))
+yhat <- mitsub.fit$fitted.values
+plot(yhat,r0,xlab="fitted values",ylab="standardised residuals")
+abline(h=c(-2,0,2), lty=c(2,1,2))
+```
+
+
+# 3.2: leverage
+To see which points $x_i$ have high leverage,
+```{r}
+mitsub <- read.table('/course/data/mitsub.txt', header=T)
+attach(mitsub)
+mitsub.fit <- glm(formula = price ~ age, family = gaussian())
+X <- model.matrix(mitsub.fit)
+
+age[which(hat(X)>= 3*2/length(age))]
+```
+
+# example: cooks distance
+
+```{r}
+mitsub <- read.table('/course/data/mitsub.txt', header=T)
+attach(mitsub)
+mitsub.fit <- glm(formula = price ~ age, family = gaussian())
+
+attach(mitsub)
+cookd <- cooks.distance(mitsub.fit)
+cookd <- cookd/max(cookd)
+cook.colours <- gray(1-sqrt(cookd))
+plot(age,price,bg=cook.colours,pch=21,cex=1.5)
+points(age,price,pch=1,cex=1.5)
+abline(lm(price~age)$coefficients,col=2)
+```
+
+
+# activity in R: Distribution of residuals
+
+Recall the basketball dataset from the previous activity. Plot the standardised residuals vs fitted values for the case of the multivariate regression from the previous activity. Interpret the obtained plot.
+```{r}
+basketball<-read.table("../basketball.txt", header=TRUE)
+t(head(basketball))
+attach(basketball)
+
+basketball.lm<-lm(PPM~Height+APM+MPG+Age)
+summary(basketball.lm)
+
+X2<-model.matrix(basketball.lm)
+r2<-basketball.lm$residuals
+sigmahat2<-sqrt(sum(r2^2)/basketball.lm$df.residual)
+r0 <- r2/(sigmahat2*sqrt(1-hat(X2)))
+yhat2 <- basketball.lm$fitted.values
+plot(yhat2, r0, xlab="Fitted Values", ylab="Standardised Residuals", main="Residual Plot")
+abline(h=c(-2,0,2), lty=c(2,1,2))
+```
+From the standardised residuals plot above, we can see that except for a few high residuals, the residuals tend to have no particular pattern and appear as randomly scattered points around the horizontal axis, in line without model assumptions. There are more than 9595 of standardised residuals within ±2±2 standard deviations. This is an indication that the model may be adequate. The fact that the highest standardised residual is slightly above 33 indicates a violation of the normality assumption and this observation can be treated as an outlier.
+
+
+# Question
+Consider the regression output of the basketball data analysis one more time. What is the coefficient of determination in your analysis? What does it tell you about the model fit and how can it be interpreted?
+
+```{r}
+basketball <- read.table("/course/data/baskball.txt", header=TRUE)
+t(head(basketball))
+attach(basketball)
+
+# Perform any quick analysis here
+```
+
+
+# Question
+What is the F statistic value in our basketball data analysis? What does it tell you about the model adequacy?
+
+```{r}
+basketball <- read.table("/course/data/baskball.txt", header=TRUE)
+t(head(basketball))
+attach(basketball)
+
+# Perform any quick analysis here
+```
+
+# Question
+What is the F statistic value in our basketball data analysis? What does it tell you about the model adequacy?
+```{r}
+basketball <- read.table("/course/data/baskball.txt", header=TRUE)
+t(head(basketball))
+attach(basketball)
+
+# Perform any quick analysis here
+
+```
+From the regression output, we can see that the F -statistic has the value of 16.4216.42 with a p-value of 3.664e−103.664e−10. This result shows that there is solid evidence that at least one of the four predictors is significant.
+
+
+# Activity: Calculation of the F statistic using R-squared
+As cheese ages, various chemical processes take place, which determines the taste of the final product. In a study of Cheddar cheese from the La Trobe Valley of Victoria, Australia, samples of cheese were analysed for their chemical composition and were subjected to taste tests. Overall taste scores were obtained by combining the scores from several tasters.
+
+Data are measured on concentrations of various chemicals in 30 samples of mature Cheddar cheese, and a subjective measure of taste for each sample. The variables aceticacetic and H2SH2S are the natural logarithm of the concentration of acetic acid and hydrogen sulphide respectively. The variable lacticlactic has not been transformed.
+
+The multiple linear regression can be performed in R as follows:
+
+```{r}
+library(faraway)
+
+data("cheddar")
+attach(cheddar)
+
+cheese.lm<-lm(taste~Acetic+H2S+Lactic)
+summary(cheese.lm)
+
+```
+Show how the F-statistic is calculated in R (you can use the reported value of R-squared) and use it to test whether any of the three possible predictors are significant, that is to test the following hypothesis:
+
+```{r}
+library(faraway)
+
+data("cheddar")
+attach(cheddar)
+
+cheese.lm<-lm(taste~Acetic+H2S+Lactic)
+summary(cheese.lm)
+```
+
+# solution
+
+# example: one factor analysis
+```{r}
+library(dobson)
+data("plant.dried")
+attach(plant.dried)
+
+head(plant.dried)
+```
+
+# model 1
+```{r}
+library(dobson)
+data("plant.dried")
+attach(plant.dried)
+
+X <- cbind( c(rep(1,10),rep(0,20)) , c(rep(0,10),rep(1,10), rep(0,10)) ,
+            c(rep(0,20),rep(1,10))  )
+
+y <- matrix(weight,ncol=1)
+b.hat <- solve(t(X) %*% X) %*% t(X) %*% y
+b.hat
+```
+
+# model 2
+
+```{r}
+library(dobson)
+data("plant.dried")
+attach(plant.dried)
+
+X <- cbind( rep(1, nrow(plant.dried)) ,
+            c(rep(1,10),rep(0,20)) ,
+            c(rep(0,10),rep(1,10), rep(0,10)) ,
+            c(rep(0,20),rep(1,10))  )
+
+lambda <- mean(weight)
+mu.hat <- lambda
+mu.hat
+
+alpha.hat <- aggregate(weight, list(group), mean)$x - lambda
+alpha.hat
+```
+
+# model 3
+
+```{r}
+library(dobson)
+data("plant.dried")
+attach(plant.dried)
+
+y <- matrix(weight, ncol=1)
+X <- cbind( rep(1, nrow(plant.dried)) ,
+            c(rep(0,10),rep(1,10), rep(0,10)) ,
+            c(rep(0,20),rep(1,10))  )
+
+b.hat <- solve(t(X) %*% X) %*% t(X) %*% y
+b.hat
+```
+
+```{r}
+library(dobson)
+data("plant.dried")
+attach(plant.dried)
+
+y <- matrix(weight, ncol=1)
+X <- cbind( rep(1, nrow(plants)) ,
+            c(rep(0,10),rep(1,10), rep(0,10)) ,
+            c(rep(0,20),rep(1,10))  )
+
+b.hat <- solve(t(X) %*% X) %*% t(X) %*% y
+b.hat
+
+D1 <- t(y) %*% y - t(b.hat) %*% t(X) %*% y
+
+# Null model:
+X0 <- matrix(rep(1,nrow(plant.dried)),ncol=1)
+b0.hat <- solve(t(X0) %*% X0) %*% t(X0) %*% y
+D0 <- t(y) %*% y - t(b0.hat) %*% t(X0) %*% y
+
+Fstat <- ((D0 - D1)/(ncol(X)-1)) / (D1 / (nrow(X)-ncol(X)))
+crit.val <- qf(0.95, df1 = ncol(X)-1, df2 = nrow(X)-ncol(X))
+
+if(Fstat > crit.val){
+  cat("There is enough evidence to reject H0")
+}else{
+  cat("There is NOT enough evidence to reject H0")
+}
+```
+
+
+
+
+```{r}
+library(dobson)
+data("plant.dried")
+attach(plant.dried)
+
+res.lm <- lm(weight ~ group)
+summary(res.lm)
+```
+
+
+```{r}
+library(ggplot2) #Install if needed
+library(dobson)
+
+data("achievement")
+attach(achievement)
+plot(achievement)
+
+ggplot(achievement, aes(x = x, y = y, colour = method)) +
+  geom_point(aes(shape=method, color=method)) +
+  labs(x = "Initial aptitude, x") +
+  labs(y = "Achievement score, y")
+```
+
+
+```{r}
+library(dobson)
+
+data("achievement")
+attach(achievement)
+
+res.lm <- lm(y ~ method + x, data = achievement)
+summary(res.lm)
+```
+
+
+```{r}
+library(dobson)
+
+data("achievement")
+attach(achievement)
+
+res.glm <- glm(y ~ method + x, data = achievement)
+summary(res.glm)
+```
+
+
+```{r}
+library(ISLR)
+
+data("Credit")
+
+lm <- lm(Balance~Income+Student, data=Credit)
+
+plot(0,0, xlim=c(0,150), ylim=c(200,1400), xlab="Income", ylab="Balance")
+abline(a=lm$coefficients[1]+lm$coefficients[3], b=lm$coefficients[2], col=2,
+       lwd=2)
+abline(a=lm$coefficients[1], b=lm$coefficients[2], col=1, lwd=2)
+legend("topleft", legend=c("student", "non-student"), col=c(2,1), lwd=2,
+       cex=0.9)
+
+lm2 <- lm(Balance~Income*Student, data=Credit)
+
+plot(0,0, xlim=c(0,150), ylim=c(200,1400), xlab="Income", ylab="Balance")
+abline(a=lm2$coefficients[1]+lm2$coefficients[3],
+       b=lm2$coefficients[2]+lm2$coefficients[4], col=2, lwd=2)
+abline(a=lm2$coefficients[1], b=lm2$coefficients[2], col=1, lwd=2)
+legend("topleft", legend=c("student", "non-student"), col=c(2,1), lwd=2,
+       cex=0.9)
+```
+
+
+
+
+```{r}
+library(ISLR)
+data(Credit)
+attach(Credit)
+
+par(mfrow=c(1,2))
+plot(Limit, Age, xlab="Limit", ylab="Age", col="red")
+plot(Limit, Rating, xlab="Limit", ylab="Rating", col="red")
+```
+
+
+```{r}
+library(ISLR)
+data(Credit)
+attach(Credit)
+
+cor(cbind(Limit, Age, Rating))
+```
+
+
+```{r}
+library(ISLR)
+data(Credit)
+attach(Credit)
+
+lm.limit <- lm(Limit ~ Rating + Age)
+1 / (1- summary(lm.limit)$r.squared) # VIF Limit
+
+lm.rating <- lm(Rating ~ Limit + Age)
+1 / (1- summary(lm.rating)$r.squared) # VIF Rating
+
+lm.age <- lm(Age ~ Rating + Limit)
+1 / (1- summary(lm.age)$r.squared) # VIF Age
+```
+
+```{r}
+library(ISLR)
+library(car)
+
+data(Credit)
+attach(Credit)
+
+lm.full <- lm(Balance ~ Limit + Rating + Age)
+vif(lm.full)
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
