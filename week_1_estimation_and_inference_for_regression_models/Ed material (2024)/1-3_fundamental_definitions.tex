@@ -1,0 +1,471 @@
+%! Author = noone
+%! Date = 1/21/24
+
+% Preamble
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+% Remove paragraph indentation
+\setlength{\parindent}{0pt}
+
+% Increase space between paragraphs
+\setlength{\parskip}{1em}  % Adjust the value as needed
+
+% Discourage hyphenation
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+
+% Document
+\begin{document}
+
+\section{1.3 Fundamental Definitions: The purpose of regression analysis}
+
+Regression analysis is performed for two main reasons: \textbf{prediction} or \textbf{inference}.
+
+\subsection{Prediction}
+
+In many situations, input \( X \) is available but the output \( Y \) cannot be easily obtained. Since the error term averages to zero, we can predict using \( Y \):
+
+\begin{equation}
+    \hat{Y} = \hat{f}(X)
+\end{equation}
+
+where \(\hat{f}\) is the estimate for \(f\) and \(\hat{Y}\) represents the resulting prediction for \(Y\).
+
+The estimate \(\hat{f}\) is characterized by a \textbf{reducible} error and by an \textbf{irreducible} error.
+
+\begin{align*}
+    \mathbb{E}[(Y - \hat{Y})^2] &= \mathbb{E}[(f(X) + \epsilon - \hat{f}(X))^2] \\
+    &= [f(X) - \hat{f}(X)]^2 + 2 \text{Var}(\epsilon)
+\end{align*}
+
+\subsection{Inference}
+
+The goal of inference is to understand the \textbf{relationship between} \(X\) and \( Y \). How \( Y \) changes as a function of \( X_1, X_2, \ldots, X_p \).
+
+\begin{enumerate}
+    \item Which predictors are associated with the response?
+    \item What is the relationship between the response and each predictor?
+    \item Is the relationship between \( Y \) and each predictor linear or more complex?
+\end{enumerate}
+
+Depending on the purpose of the analysis, various methods of estimating $f$ may be more appropriate. For \textbf{prediction}, use of non-linear models may be more appropriate (in some cases overfitting causes problems), whil for \textbf{inference}, linear models may be more useful.
+
+\subsection{Methods of estimation}
+
+There are two main types of approaches to estimation:
+
+\subsubsection{Parametric}
+
+\begin{enumerate}
+    \item Assumption on the functional form of \( f \):
+    \begin{equation}
+        f(x) = \beta_0 + \beta_1 X_1 + \ldots + \beta_p X_p
+    \end{equation}
+    \item Method to fit the model (estimating \( \beta_0, \beta_1, \ldots, \beta_p \)).
+\end{enumerate}
+
+\subsubsection{Nonparametric}
+
+Nonparametric methods do not make explicit assumptions about the functional form of \( f \) but require larger sample sizes due to the lack of fixed parameters.
+
+\subsection{Maximum Likelihood Estimation (MLE)}
+
+\subsubsection{Definition and Concept}
+
+\textbf{Definition}: The \textbf{maximum likelihood estimator} of $\theta$ is the value \( \hat{\theta} \) which maximizes the likelihood function \( L(\theta; y) \), that is:
+
+\begin{equation}
+    L(\hat{\theta}; y) \geq L(\theta; y) \quad \text{for all} \quad \theta \in \Theta \text{(parameter space)}
+\end{equation}
+
+Equivalently, $\hat{\theta}$ is the value that maximises the \textbf{Log-likelihood function}:
+
+\begin{equation}
+    l(\theta; y) = \ln L(\theta; y)
+\end{equation}
+
+since the logarithmic function is monotonic. The estimate $\theta$ is obtained by differentiating the log-likelihood function with respect to each element $\theta_j$ of $\theta$ and solving the simultaneous equations:
+\begin{equation}
+    \frac{\partial l(\theta; y)}{\partial \theta_j} = 0, \quad j = 1, \ldots, p
+\end{equation}
+
+If the matrix of second derivatives:
+
+\begin{equation}
+    \frac{\partial^2 l(\theta; y)}{\partial \theta_j \partial \theta_k} \quad (1.3.7)
+\end{equation}
+
+evaluated at $\theta = \hat{\theta}$ is negative definite, then $\hat{\theta}$ maximizes the log-likelihood function in the interior of $\Theta$
+
+Note that it is also necessary to check if there are any values of $\theta$ at the edges of the parameter space $\Theta$ that give local maxima of $l(\theta,y)$ when all local maxima have been identified, the value of $\hat{\theta}$ correspondingto the largest on is the MLE.
+
+\subsubsection{Invariance Property of MLE}
+Invariance: If \( g(\theta) \) is any function of the parameters, the maximum likelihood estimator of \( g(\theta) \) is \( g(\hat{\theta}) \). Other properties:
+\begin{itemize}
+    \item Consistency
+    \item sufficiency
+    \item asymptotic efficiency
+    \item and asymptotic normality
+\end{itemize}
+
+\subsubsection{Practice Example: Poisson distribution}
+
+\begin{itemize}
+    \item A practice example is provided, which can be implemented in R.
+    \item Let $Y_1, Y_2,\dots, Y_n$ be independent random variables with Poisson distribution
+    \item Consider independent random variables \( Y_1, Y_2, \ldots, Y_n \) with Poisson distribution.
+    \item The likelihood function for Poisson distribution can be defined and used to find the MLE of the parameter.
+\end{itemize}
+
+\begin{equation}
+    f(y_i, \theta) = \dfrac{\theta^{y_i} e^{-\theta}}{y_i !}
+\end{equation}
+
+$y_i = 0, 1,\dots,$ with the parameter $\theta$. \textbf{Find}: The MLE of $\theta$
+
+\subsection{Least Squares Estimation}
+
+let $Y_1,\dots,Y_n$ be independent r.v. with expected values $\mu, \dots , \mu_n$ wihch are functions of the parameter vector (that we want to estimate)
+
+\[\beta = [\beta_1 ,\dots, \beta_p]^{\top}, p < n\]
+
+thus
+
+\[\mathbb{E}(Y_{i}) = \mu_i (\beta)\]
+
+The simplest method of least squares consists of finding the estimator $\hat{\beta}$ that minimizes the sum of squared differences between $Y_{i}$'s and their espected values
+
+\begin{equation}
+    \text{SS} = \sum_{i=1}^{n} [Y_i - \mu_i(\beta)]^2
+\end{equation}
+
+Where:
+\begin{itemize}
+    \item $SS$ stands for the Sum of Squares.
+    \item $n$ is the number of observations
+    \item $Y_i$ represents the observed values.
+    \item $\mu_i (\beta)$ is the expected value of $Y_i$, which is a function of the parameter vector $\beta$
+\end{itemize}
+
+This equation is a key component of least squares estimation, where the objective is to minimize the sum of the squared differences between the observed values and their expected values, which are determined by the model parameters. $\hat{\beta}$ is obtained by differentiating $SS$ with respect to elements $\beta_j$
+
+\begin{equation}
+    \dfrac{\partial SS}{\partial \beta_j} = 0, \quad j = 1, \ldots, p \quad (1.3.9)
+\end{equation}
+
+Where:
+
+\begin{itemize}
+    \item $SS$ stands for the Sum of Squares.
+    \item $\beta_j$ represents the parameters of the model
+    \item $\frac{\partial SS}{\partial \beta_j}$ is the partial derivative of the sum of swaures $SS$ with respect to $\beta_j$
+    \item The equation states that to find the optimal parameters $\beta_j$ that minimize the Sum of Squares, you set the partial derivatives to zero for each parameter.
+\end{itemize}
+
+This equation is a fundamental part of the process of least squares estimation, used for fitting a linear model to a set of observed data by minimizing the sum of the squares of the differences between observed and predicted values.
+
+\subsubsection{Definition and Application}
+
+\begin{itemize}
+    \item Definition: Least squares estimation involves minimizing the sum of squares of differences between observed values and their expected values.
+    \item It is widely used for parameter estimation in regression models.
+\end{itemize}
+
+\subsection{Weighted Least Squares}
+
+If $Y_{i}$'s have variances $\sigma_{i}^{2}$ that are not all equal it may be desirable to minimise the weighted sum of squared differences:
+
+\begin{equation}
+    \text{WSS} = \sum_{i=1}^{n} w_i [Y_i - \mu_i(\beta)]^2 \quad
+\end{equation}
+
+where the weights are $w_i = (\sigma_{i}^{2})^{-1}$.
+
+In this way the observations that are less reliable will have less influence on the estimates.
+
+More generally, if $y = [Y_{1},\dots,Y_{n}]^{\top}$ is a random vector with mean vector $\mu = [\mu_1 ,\dots, \mu_n]^{\top}$ and variance-covariance matrix $V$, then:
+
+\begin{equation}
+    \text{WSS} = (\mathbf{y} - \boldsymbol{\mu})^{\top} \mathbf{V}^{-1} (\mathbf{y} - \boldsymbol{\mu}) \quad
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $WSS$ represents the Weighted Sum of Squares.
+    \item $y$ is the vector of observed values.
+    \item $\mu$ is the vector of expected values.
+    \item $V$ is the variance-covariance matrix of the observations.
+    \item The superscript $\top$ denotes the transpose of a matrix or a vector.
+    \item $V^{-1}$ represents the inverse of the variance-covariance matrix
+\end{itemize}
+
+This equation is a general form of the Weighted Least Squares method, accounting for the variances and covariances among the observations, making it applicable to more complex scenarios in regression analysis.
+
+Comments
+\begin{itemize}
+    \item Method of least squares can be used without making assumptions about the distribution of the response variables $Y_i$ in contrast to the maximum likelihood estimation.
+    \item For many situations maximum likelihood and least squares estimates are identical.
+    \item In many cases **numerical methods** are used for parameter estimation.
+    \item When variances of observations are unequal, the weighted sum of squared differences is minimized.
+    \item Recommended reading: Dobson pages 13 - 16
+\end{itemize}
+
+\subsection{Model Fitting}
+Model fitting involves 4 steps:
+\subsubsection{Process and Steps}
+
+\begin{itemize}
+    \item \textbf{Model specification}: an equation linking the response and the explanatory variables and a probability distribution for the response variable
+    \item \textbf{Estimation}: of the parameter of the model
+    \item \textbf{Checking the adequacy of the model}
+    \item \textbf{Inference}: calculating the confidence interval, testing the hypootheses
+\end{itemize}
+
+\subsection{Australian Longitudinal Study on Women's Health}
+
+\subsubsection{Observation and Hypotheses}
+\begin{enumerate}
+    \item Observation: Women living in country areas tend to have fewer consultations with General Practitioners (GPs) than women who live near a wide range of health services.
+    \item Hypotheses: Is this because they are healthier, or because of structural factors?
+\end{enumerate}
+
+\subsubsection{Group of study}
+\begin{itemize}
+    \item Women living in country towns (town group) or in rural areas (country group) in NSW.
+    \item Age group: 70-75 years.
+    \item Same socio-economic status.
+    \item Fewer than 3 GP visits in 1996.
+\end{itemize}
+
+\subsubsection{Statistical Analysis}
+Consider \( Y_{jk} \) as a random variable representing the number of conditions for woman \( j \) in group \( k \) (1 for town group, 2 for country group), where \( Y_{jk} \sim \text{Pois}(\theta_j) \) for \( k = 1, \ldots, K_j \).
+
+The interest question can be formalized as:
+\begin{align*}
+    H_0 &: \theta_1 = \theta_2 \Rightarrow E[Y_{jk}] = \theta \\
+    H_1 &: \theta_1 \neq \theta_2 \Rightarrow E[Y_{jk} \text{ for } j] = \theta_j
+\end{align*}
+
+if $H_0$ is true:
+
+\begin{equation}
+    l_0 (\theta; y) = \sum_{j=1}^{2} \sum_{k=1}^{K_j} [y_{jk} \log \theta - \theta - \log y_{jk}!]
+\end{equation}
+
+and the MLE is
+
+\begin{equation}
+    \hat{\theta} = \sum_{j=1}^{2} \sum_{k=1} \dfrac{y_{jk}}{N}
+\end{equation}
+
+Where $N= \sum_{j=1}^{2} k_{j}, \hat{\theta} = 1.184$ with $\hat{l_0} = -68.3868$
+
+\textbf{Remark}: $l_1 \geq l_0$ because one or more parameter has been fitted. The \textbf{adequacy} of the models is usually evaluated by looking at the \textbf{(standardised) residuals}
+
+\[r = \dfrac{Y - \hat{\theta}}{\sqrt{\hat{\theta}}}\]
+
+Assuming poisson independent data, the standardised residuals are approximately distributed as a standard normal distribution $N(0,1)$, then $r_{1}^{2} \sim \chi_{1}^{1}$ and
+
+\begin{equation}
+    \sum_{i=1}^{n} r_i^2 = \sum_{i=1}^{n} \frac{(Y_i - \hat{\mu}_i)^2}{\hat{\mu}_i} \sim \chi^2_m
+\end{equation}
+
+where $\chi_{m}^{2}$ is a $\chi^2$ distribution with $m$ degrees of freedom and $m = n - p$
+
+\textbf{Under} $H_0, \sum_{i=1}^{N} r_{0_i}^{2} = 46.8457$ with $K_1 + K_2 - 1 = 26 + 23 - 1 = 48$
+
+\textbf{Under} $H_1, \sum_{i=1}^{N} r_{1_i}^{2} = 43.6304$ with $K_1 + K_2 - 2 = 26 + 23 - 2 = 47$
+
+For now, it is enough to say that $46.8457 - 43.6304 = 3.2153$ seems small, but later we will quantify the interpretation on it.
+
+\subsubsection Relating income to years of education
+Lets analyse the dataset Income in the R package ISLR
+
+Predicting
+\begin{itemize}
+    \item \textbf{Input}: Years of education ($X_1$) and seniority ($X_2$)
+    \item \textbf{Output}: income ($Y$)
+    \item \textbf{Hypothesis}: there is some relationship between $Y$ and $x = (X_1, X_2)$
+\end{itemize}
+
+\begin{equation}
+    Y = f(x) + \epsilon
+\end{equation}
+
+\begin{itemize}
+    \item $f$ is the unknown function (systematic part)
+    \item $\epsilon$ is the error term
+\end{itemize}
+
+We can fit the \textbf{linear model}:
+
+\begin{align}
+    \textbf{income} &= \beta_0 + \beta_1 \text{education} + \beta_2 \text{seniority} + \epsilon \\
+    Y &= \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \epsilon
+\end{align}
+
+\subsubsection{Nonparametric Model: Thin-Plate Spline}
+
+think: how to choose the level of smoothness?
+
+\subsubsection{What have we learnt from these examples?}
+
+\begin{enumerate}
+    \item what is the scale of measurement?
+    \item what is a reasonable distribution to model the data?
+    \item what is the relationship with other variables?
+\end{enumerate}
+
+\begin{align}
+    \mathbb{E}[Y] &= \alpha + \beta x \\
+    \log[\mathbb{E}(Y)] &= \alpha + \beta \sin(\gamma x)
+\end{align}
+
+\begin{enumerate}
+    \item What is the best parameter estimation process? MLE, Least Squares, Bayesian Methods?
+    \item Why choosing a restrictive (parametric method) instead of a very flexible (non parametric) approach?
+    \item Model checking:
+\end{enumerate}
+
+\subsubsection{Don't under-evaluate exploratory statistics!}
+Wages Dataset: wages for a group of males from the Atlantic region of the USA (available in the R package ISLR)
+
+Comments
+\begin{itemize}
+    \item Many statistical learning methods are relevant and useful in a wide range of disciplines beyond just statistical sciences.
+    \item Statistical learning should not be viewed as a series of black boxes.
+    \item While it is important to know what job is performed by each tool, it is not necessary to have the skills to construct the machine inside the box.
+    \item We will work on real-world problems.
+\end{itemize}
+
+\subsection{Measuring the quality of a fit}
+\textbf{The Goal}: We need to measure how well the model predictions match the data. In a regression setting, this is done by the \textbf{mean squared error (MSE)}
+
+\begin{equation}
+    \text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{f}(x_i))^2
+\end{equation}
+
+However a low MSE can hide problems of overfitting on the dataset at hand. Then, what we really want to have is the accuracy of the predictions when we apply the method to unseen data.
+
+Suppose we have (\textbf{training}) observations \(\{ (x_1, y_1), (x_n, y_n) \}\) on which we estimate $f(x)$; then we obtain estimates $\hat{f}(x_1), \hat{f}(x_2), \dots, \hat{f} (x_n)$
+
+We want to measure the accuracy of the model on new input (test) variables $x_0$, to obtain the \textbf{test MSE}
+
+\begin{equation}
+    \text{Ave} (\hat{f}(x_0) - y_0)^2
+\end{equation}
+
+which is the average square dprediction error on the test observations $(x_0, y_0)$
+
+Then we can
+\begin{itemize}
+    \item select the model which minimizes the \textbf{test MSE}, if test observations are available
+    \item select the model which minimizes the \textbf{training MSE} if test observations are not available
+    \item use estimation method for the test MSE, like \textbf{cross validation}
+\end{itemize}
+
+\subsubsection{The Bias-variance trade-off}
+There are \textbf{two competing properties} of statistical learning methods. The expected test MSE for a gaven value of $x_0$ can be decomposed into 3 quantities:
+
+\begin{align}
+    \text{MSE}(x_0) &= \mathbb{E}[y_0 - \hat{f}(x_0)]^2 \nonumber \\
+    &= \mathbb{E} [f(x_0) + \epsilon - \hat{f}(x_0)]^2 \nonumber \\
+    &= \mathbb{E} \left[ f(x_0) - \mathbb{E}\hat{f}(x_0) + \mathbb{E}\hat{f}(x_0) - \hat{f}(x_0) \right]^2 + \text{Var}[\epsilon] \nonumber \\
+    &= \left[ f(x_0) - \mathbb{E}\hat{f}(x_0) \right]^2 + 2 \left[ \hat{f}(x_0) - \mathbb{E}\hat{f}(x_0) \right] \mathbb{E} \left[ \hat{f}(x_0) - \mathbb{E}\hat{f}(x_0) \right] + \nonumber \\
+    & \quad \mathbb{E} \left[ \hat{f}(x_0) - \mathbb{E}\hat{f}(x_0) \right]^2 + \text{Var}[\epsilon] \nonumber \\
+    &= \text{Bias}^2 \left(\hat{f} (x_0) \right) + \text{Var} [\epsilon]
+\end{align}
+
+Comments:
+\begin{itemize}
+    \item The test MSE can never be lower than $\mathbb{V}\text{ar}[\epsilon]$
+    \item \textbf{Variance}: the mount by which $\hat{f}$ would change when changing the training dataset (in general, flexible methods have larger variance)
+    \item \textbf{Bias}: the error that is introduced by approximating a potentially complicated relationship between $Y$ and $X$ with a simpler model (in general restrictive methods have a larger bias)
+    \item In practice as we increase the flexibility of the model the bias tends to decrease faster than the variance increases, however at some point, increasing flexibility has little impac on bias and significantly increases the variance
+    \item in practice we cannot explicitly compute the test MSE
+\end{itemize}
+
+\subsubsection{The classification setting}
+Model accuracy can be also applied for \textbf{categorical outputs}, with slight modifications.
+In a \textbf{classification} setting, model accuracy is measured by the (training) \textbf{error rate}
+
+\begin{equation}
+    \text{ER} = \dfrac{1}{n} \sum_{i=1}^{n} \mathbb{I}(y_i \neq \hat{y}_i)
+\end{equation}
+
+where $\hat{y}_i$ is the predicted label for the $i$-th observation, using the estimate $\hat{f}$ and $\mathbb{I}(y_i \neq \hat{y}_i)$ is an indicator function which is equal to:
+
+\begin{itemize}
+    \item 1 if $y_i \neq \hat{y}_i$ (miss-classification)
+    \item 0 if $y_i = \hat{y}_i$ (correct classification)
+\end{itemize}
+
+As in the case of regression, we are more interested in the test error rate, which is the error rate that results from applying the classifier to est observations, not available in the training dataset
+
+\[\text{Ave} (\mathbb{I}(y_0 \neq \hat{y}))\]
+
+where $\hat{y}_0$ is the prediction obtained by applying the classifier on input $x_0$
+
+\subsubsection{The Bayes Classifier}
+The test error rate is minimized, on average, by a simple classifier - the Bayes classifier - that assigns each observation to the most likely class given its predictor values, i.e. we should simply assign a test observation with predictor $x_0$ to the class $j$ for which
+
+\[\text{Pr}(Y = j | X = x_0)\]
+
+is maximized
+
+If there are only 2 classes, the Bayes classifier predicts class 0 if
+
+\[\text{Pr}(Y=0|X=x_0) > 0.5\]
+
+and class 1 otherwise.
+
+The expect prediction error rate is:
+
+\begin{align}
+    \text{EPE} &= \mathbb{E}[\mathbb{I}(y_0 \neq \hat{y}_0)] \nonumber \\
+    &= \mathbb{E}_X \sum_{j=0}^{1} \left[ \mathbb{I}(y_0 \neq \hat{y}_0) \right] \Pr(y_0 = j|X = x)
+\end{align}
+
+and to minimize the expected error, you need to minimize the probability of being wrong or
+
+\[\hat{y} = 1 \quad \text{if  } \Pr(y_0 = 1|X=x_0) = \max_{j \in \{ 0,1 \}} \Pr(y_0 = j|X = x_0)\]
+
+The \textbf{expected Bayes error rate} is then:
+
+\[1 - \mathbb{E}_X [\max_{j \in \{ 0,1 \}} \Pr(Y_0 = j|X)]\]
+
+where the expectation with respect to probability over all possible values of $X$.
+
+\subsubsection{K-nearest Neighbours}
+In practice, we do not know the conditional distribution of $Y$ given $X$, so we can't compute the Bayes Classifier. The Bayes classifier is an \textbf{unattainable gold standard}.
+
+The \textbf{K-nearest neighbours (KNN)} classifier estiamtes the conditional probability of $Y$ given $X$ and classifies a given observation to the class with the highest estimated probability.
+
+Despite its simplicity, the KNN classifier produces classifications that are often close to the Bayes classifier.
+
+Given a positive integer $K$ (\textbf{the choice of K is essential!}) and a test input observation $x_0$ the KNN classifier:
+\begin{itemize}
+    \item identifies the $K$ points in the training data that are closest to $x_0$, - a neighbourhood of $x_0, N_0$
+    \item Computes
+    \[\Pr(Y = j | X = x_0) = \dfrac{1}{K} \sum_{i \in N_0} \mathbb{I}(y_i = j)\]
+    \item Applies Bayes rule
+    \[\Pr(X = x_0 | Y = j) = \dfrac{\text{PR}(Y = j|X = x_0)}{\Pr(Y=j)}\]
+    \item Classifies the test observation $x_0$ to the class with the largest probability
+\end{itemize}
+
+\subsubsection{References}
+Sources and recommended reading:
+
+\begin{enumerate}
+    \item A. J. Dobson \& A. G. Barnett (2018) An introduction to generalized linear models, Chapman and Hall. Chapters 1-2.
+    \item G. James, D. Witten, T. Hastie \& R. Tibshirani (2013) An Introduction to Statistical Learning with Applications in R, Springer. Chapters 1-2.
+    \item Some of the figures in this presentation are taken from An Introduction to Statistical Learning, with applications in R (Springer, 2013) with permission from the authors: G. James, D. Witten, T. Hastie and R. Tibshirani
+\end{enumerate}
+
+\end{document}
