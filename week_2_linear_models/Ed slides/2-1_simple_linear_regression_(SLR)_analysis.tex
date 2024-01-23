@@ -1,0 +1,345 @@
+%! Author = noone
+%! Date = 1/23/24
+
+% Preamble
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage{amsmath}
+
+% Document
+\begin{document}
+
+\section{Simple Linear Regression (SLR) Analysis}
+
+\subsection{Introduction}
+
+Simple linear regression (SLR) is a method to explain the relationship between two quantitative variables using a straight line. One variable is a response variable ($Y$) and the other one is a predictor variable ($X$).
+
+In this section, we will work with the Boston dataset (a famous housing dataset available in R) and show how to perform a simple linear regression analysis on this particular dataset. Each step of the analysis will be preceded with some theoretical background. We represent data as pairs of \( n \) observations:
+
+\begin{equation}
+    \[(x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n)\]
+\end{equation}
+
+Each pair consists of measurements of variables $X$ and $Y$.
+
+We will describe in detail how to calculate the intercept and slope estimates in the simple linear regression problem. Additionally, we will discuss how to assess the accuracy of the parameter estimates and how to assess the accuracy of the SLR model itself. We will also identify some potential problems arising in linear regression in general.
+
+The purpose of this section is not only to introduce simple linear regression but also to identify the main steps of statistical analysis which can later be applied to more complex statistical models.
+
+\subsection{Example: Simple Linear Regression (SLR) Analysis}
+
+The `MASS` R library contains the `Boston` dataset which records `medv` (median house value) for 506 neighbourhoods around Boston. Fit a simple linear regression model using medv as your response variable and lstat (percent of households with low socioeconomic status) as your predictor variable.
+
+We will perform the simple \textbf{linear regression analysis} in the following \textbf{steps}:
+
+\begin{enumerate}
+    \item Inspect, summarize, and visualize your dataset.
+    \item Produce a scatter diagram of the response variable versus the explanatory variable. What is the relationship between these two variables?
+    \item Fit the SLR model using the \texttt{lm()} function in R. Write down the resulting regression equation. What does this equation tell you?
+    \item Assess the accuracy of the coefficient estimates using the R output.
+    \item Assess the accuracy of the SLR model.
+    \item Identify any potential problems in your analysis by using diagnostic plots.
+    \item Use the regression equation to predict the value of medv for lstat values of 5, 10, and 15.
+\end{enumerate}
+
+Below the text in blue refers directly to our example while the text in black explains the theoretical background or presents other information needed for the analysis.
+
+\subsection{Step 1: Inspecting and Summarising the Data}
+
+As the first step, we load the \texttt{MASS} library in R and display names of all the variables in the Boston dataset using the \texttt{names()} function. Type \texttt{?Boston} to see the description of the Boston dataset in the help window.
+
+\begin{verbatim}
+> library(MASS)
+> ?Boston
+(press q to close it)
+> names(Boston)
+[1] "crim" "zn" "indus" "chas" "nox" "rm" "age"
+[8] "dis" "rad" "tax" "ptratio" "black" "lstat" "medv"
+\end{verbatim}
+
+The \texttt{dim()} function tells us that the dataset has 506 rows or observations and 14 columns or variables.
+
+\begin{verbatim}
+> dim(Boston)
+[1] 506 14
+\end{verbatim}
+
+There are several options in R to view the data. The \texttt{head()} function returns the first \( n \) rows (\( n = 6 \) by default) of a dataset. The \texttt{fix()} function can be used to view the data in a spreadsheet-like window. Note that the window must be closed before further R commands can be entered.
+
+\begin{verbatim}
+> head(Boston)
+\end{verbatim}
+
+\[ \text{[Data table of the first few rows of the Boston dataset is displayed here]} \]
+
+The \texttt{summary()} function produces a numerical summary for each variable in our dataset. Simply typing \texttt{summary(medv)} or \texttt{summary(lstat)} will give an error message because we have not told R to look in the Boston dataset for these variables. To refer to a variable, we must type the dataset name followed by a \$ symbol and the variable name.
+
+\begin{verbatim}
+> summary(Boston$medv)
+Min. 1st Qu. Median Mean 3rd Qu. Max.
+5.00 17.02 21.20 22.53 25.00 50.00
+\end{verbatim}
+
+Alternatively, use the \texttt{attach()} function in order to tell R to make the variables in the attached dataset available by name. It is good practice to detach the dataset after the task is completed. To avoid the \texttt{attach()} function, it is recommended to apply the \texttt{with(data...)} function.
+
+\begin{verbatim}
+> attach(Boston)
+> summary(lstat)
+Min. 1st Qu. Median Mean 3rd Qu. Max.
+1.73 6.95 11.36 12.65 16.95 37.97
+> detach(Boston)
+
+> with(data=Boston, summary(medv))
+Min. 1st Qu. Median Mean 3rd Qu. Max.
+5.00 17.02 21.20 22.53 25.00 50.00
+\end{verbatim}
+
+We can now produce the summary table for the variables of interest. The \texttt{cbind()} function combines by columns the numerical summaries of \texttt{medv} and \texttt{lstat}.
+
+\begin{verbatim}
+> attach(Boston)
+> summary(cbind(medv, lstat))
+medv lstat
+Min. : 5.00 Min. : 1.73
+1st Qu. : 17.02 1st Qu. : 6.95
+Median : 21.20 Median : 11.36
+Mean : 22.53 Mean : 12.65
+3rd Qu. : 25.00 3rd Qu. : 16.95
+Max. : 50.00 Max. : 37.97
+\end{verbatim}
+
+\subsection{Code Summary}
+
+\begin{verbatim}
+library(MASS)
+names(Boston)
+dim(Boston)
+head(Boston)
+summary(Boston$medv)
+attach(Boston)
+summary(lstat)
+summary(cbind(medv, lstat))
+detach(Boston)
+\end{verbatim}
+
+This summary code provides a concise reference for the R commands used in the first step of our simple linear regression analysis.
+
+\subsection{Step 2: Boxplot and Scatterplot}
+
+\subsubsection{Comparative Boxplots}
+
+Comparative boxplots are a convenient way of graphically depicting groups of numerical data. They provide a visual representation of the central tendency, spread, and skewness of the data, as well as identify potential outliers. We generate boxplots for our variables of interest, medv and lstat, using the following R commands:
+
+\begin{verbatim}
+library(MASS)
+attach(Boston)
+boxplot(cbind(medv, lstat), horizontal = TRUE)
+\end{verbatim}
+
+The boxplots suggest that there may exist some possible outliers affecting our analysis. If the outliers were removed, the distribution of lstat would seem slightly right-skewed and the distribution of medv would seem symmetrical.
+
+\subsubsection{Scatterplot}
+
+The scatterplot here is used to assess the relationship between the variables of interest, medv and lstat. The scatterplot can reveal patterns, trends, relationships, or the absence thereof, between two variables.
+
+\begin{verbatim}
+library(MASS)
+attach(Boston)
+plot(lstat, medv)
+\end{verbatim}
+
+We can see that there exists a decreasing relationship between the medv and lstat variables. There seems to be some evidence of non-linearity in this relationship. On the other hand, it is likely that after removing the outliers, the relationship would appear more linear. In this example, we will fit the linear model to the original dataset. However, you can later experiment with removing the outliers from your dataset.
+
+\subsection{Step 3: Fitting the SLR}
+
+The simple linear regression model involves only one independent variable (X). The functional relationship between the true mean of \(Y_i\) (that is \( E(Y_i) \)) and \( X_i \) is the equation of a straight line:
+
+\begin{equation}
+    \[\mathbb{E}(Y_i) = \beta_0 + \beta_1X_i\]
+\end{equation}
+
+for \(i = 1, \ldots, n\), where:
+
+\begin{itemize}
+    \item - \(\beta_0\) - intercept of the line - the value of \(E(Y_i)\) when \(X = 0\)
+    \item - \(\beta_1\) - slope of the line - the rate of change in \(E(Y_i)\) per unit change in \(X\)
+\end{itemize}
+
+The deviation of the observation from its population mean is taken into account by adding a random error \(\varepsilon_i\) to give the statistical model:
+
+\begin{itemize}
+    \[Y_i = \beta_0 + \beta_1X_i + \varepsilon_i\]
+\end{itemize}
+
+for \(i = 1, 2, \ldots, n\).
+
+There are two important additional assumptions in the SLR analysis:
+
+\begin{enumerate}
+    \item \(X_i\) are measured without error so are fixed constants;
+    \item The errors \(\varepsilon_i\) are independent from each other and are normally distributed with a mean of 0 and a common variance \(\sigma^2 \), i.e., \(\varepsilon_i \sim N(0, \sigma^2)\).
+\end{enumerate}
+
+Let \(\hat{\beta_0}\) and \(\hat{\beta_1}\) be numerical estimates of the parameters \(\beta_0\) and \(\beta_1\) obtained from data and let
+
+\[\hat{y_i} = \hat{\beta_0} + \hat{\beta_1}x_i\]
+
+be the estimated mean of \(Y_i\) or prediction of \(Y_i\) when \(X_i = x_i\) for each \(i = 1, \ldots, n\).
+
+The least squares principle chooses \( \hat{\beta_0} \) and \( \hat{\beta_1} \) that minimize the sum of squares of the residuals. The \(i\)th residual (\( e_i \)) represents the prediction error for data point \( i \) when we use \( \hat{y_i} \) to predict the actual response \( y_i \). The residual sum of squares (RSS) is then given by
+
+\[RSS = \sum_{i=1}^{n} (y_i - \hat{y_i})^2 = \sum_{i=1}^{n} (y_i - (\hat{\beta_0} + \hat{\beta_1}x_i))^2\]
+
+The estimates of \(\beta_0\) and \(\beta_1\) are obtained by minimizing RSS. The derivatives of RSS with respect to \(\hat{\beta_0}\) and \(\hat{\beta_1}\) are set to zero and as a result, the least squares estimates must satisfy the following normal equations:
+
+\begin{equation}
+    \[\sum_{i=1}^{n} y_i = n\hat{\beta_0} + (\sum_{i=1}^{n} x_i)\hat{\beta_1}\]
+    \[\sum_{i=1}^{n} x_i y_i = (\sum_{i=1}^{n} x_i)\hat{\beta_0} + (\sum_{i=1}^{n} x_i^2)\hat{\beta_1}\]
+\end{equation}
+
+Solving the above equations gives the least squares estimates for the slope and intercept:
+
+\begin{equation}
+    \[\hat{\beta_1} = \frac{\sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^{n} (x_i - \bar{x})^2}\]
+    \[\hat{\beta_0} = \bar{y} - \hat{\beta_1}\bar{x}\]
+\end{equation}
+
+where \(\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i \) and \( \bar{y} = \frac{1}{n} \sum_{i=1}^{n} y_i\) are the sample means.
+
+The estimates from give the equation of the best fitting line:
+
+\[\hat{y_i} = \hat{\beta_0} + \hat{\beta_1}x_i\]
+
+Naturally, we still have to verify whether \(\hat{\beta_0}\) and \(\hat{\beta_1}\) really minimize RSS and satisfy conditions of the minimizing problem. Thus we need the second derivatives of RSS with respect to \(\hat{\beta_0}\) and \(\hat{\beta_1}\), which are given by the so-called Hessian matrix (matrix of second derivatives).
+
+The Hessian matrix \( H \) is given by
+
+\[H = 2 \begin{pmatrix}
+n & \sum x_i \\
+\sum x_i & \sum x_i^2
+\end{pmatrix}\]
+
+Then it remains to be shown that the Hessian matrix is positive definite. Since \(n > 0\) and \[\det(H) = 4(n \sum x_i^2 - (\sum x_i)^2) > 0\] from Hölder inequality, the hessian matrix $H$ is positive definite and therefore \(\hat{\beta_0}\) and \( \hat{\beta_1}\) minimize RSS.
+
+\subsubsection{Fitting the Model}
+
+We now fit the simple linear regression model to the data, with \texttt{medv} as the response and \texttt{lstat} as the predictor. We use the \texttt{lm()} function in R:
+
+\begin{verbatim}
+library(MASS)
+lm.fit <- lm(medv ~ lstat, data=Boston)
+summary(lm.fit)
+\end{verbatim}
+
+From the above R output we can write down the obtained regression equation of the ﬁtted line:
+
+\[\text{medv} = 34.55 - 0.95 \times \text{lstat}\]
+
+Which shows that that the (\textt{medv}) median house value, decreases as the percentage of households with low socioeconomic status (\texttt{lstat}) increases, and the rate of decrease is 0.95
+
+All the information provided when we ﬁt the SLR model to our data by using the \textt{lm()} function is now stored in the object \texttt{lm.fit}.
+When we type \texttt{summary(lm.fit)}, it displays the detailed summary information about the fitted model. There are diﬀerent ways to extract information from \texttt{lm.fit}. For example, the \texttt{coef(lm.fit)} provides the estimates of the intercept and slope for the fitted model. We see from the output below that $\hat{\beta_0} = 34.55$ and $\hat{\beta_1} = -0.95$, so that the predictions are obtained by $\hat{y_i} = 34.55 - 0.95x_i$
+
+\begin{verbatim}
+library(MASS)
+lm.fit <- lm(medv ~ lstat, data=Boston)
+coef(lm.fit)
+\end{verbatim}
+
+\[ \text{(Intercept)} = 34.55384 \]
+\[ \text{lstat} = -0.9500494 \]
+
+These coefficients are used to make predictions. For example, to predict medv for specific values of lstat:
+
+\begin{verbatim}
+library(MASS)
+lm.fit <- lm(medv ~ lstat, data=Boston)
+predict(lm.fit, newdata=data.frame(lstat=c(5,10,15)))
+\end{verbatim}
+
+This R code will provide the predicted medv values for lstat values of 5, 10, and 15.
+
+We will now add the least squares regression line to the scatterplot:
+
+\begin{verbatim}
+library(MASS)
+lm.fit<-lm(medv~lstat,data=Boston)
+attach(Boston)
+plot(lstat,medv)
+abline(lm.fit,col='red',lwd=3)
+\end{verbatim}
+
+\subsection{Step 4: Assessing the Accuracy of the Coefficient Estimates}
+\subsubsection{Standard Errors for Coefficient Estimates}
+
+The coefficient estimates given in Step 3 are unbiased, that is, \( E(\hat{\beta}_0) = \beta_0\) and \(E(\hat{\beta}_1) = \beta_1\). The standard errors of \(\hat{\beta}_0\) and \(\hat{\beta}_1\), written as \(SE(\hat{\beta}_0)\) and \(SE(\hat{\beta}_1)\), can be computed using the following formulas:
+
+\[SE(\hat{\beta}_0)^2 = \frac{\sigma^2}{n} \left( 1 + \frac{\bar{x}^2}{\sum_{i=1}^{n} (x_i - \bar{x})^2} \right)\]
+
+\[SE(\hat{\beta}_1)^2 = \frac{\sigma^2}{\sum_{i=1}^{n} (x_i - \bar{x})^2}\]
+
+where \(\sigma^2 = \text{Var}(\varepsilon)\).
+
+In general, \(\sigma\) is not known but can be estimated from the data. This estimate is known as the residual standard error and is given by
+
+\[\hat{\sigma} = RSE = \sqrt{\frac{RSS}{n - 2}}\]
+
+When \(\sigma\) is estimated from data, we should write \(SE(\hat{\beta}_0)\) and \(SE(\hat{\beta}_1)\) using an extra \"hat\" but we will not use this extra \"hat\" in our notations.
+
+The standard errors for coefficient estimates in our example are \(SE(\hat{\beta}_0) = 0.5626\) and \(SE(\hat{\beta}_1) = 0.0387\), while the estimate of \(\sigma\) is 6.216 (see \texttt{summary(lm.fit)} output).
+
+\subsubsection{Confidence Interval}
+
+Standard errors can be used to compute a \((1 - \alpha)100\%\) confidence intervals for \(\beta_0\) and \(\beta_1\) as:
+
+\[[\hat{\beta}_k - t_{\alpha/2,n-2}SE(\hat{\beta}_k), \hat{\beta}_k + t_{\alpha/2,n-2}SE(\hat{\beta}_k)]\]
+
+where \(k = 0, 1\) and \(t_{\alpha/2,n-2}\) is the critical value of a Student's t-distribution with \(n - 2\) degrees of freedom.
+
+In order to obtain confidence intervals for \(\beta_0\) and \(\beta_1\), we can use the \texttt{confint()} command in R. The level of confidence is 95\% by default. From the R output, the 95\% confidence interval for the slope is \([-1.026, -0.874]\).
+
+\begin{verbatim}
+library(MASS)
+lm.fit<-lm(medv~lstat,data=Boston)
+confint(lm.fit)
+\end{verbatim}
+
+\begin{verbatim}
+            2.5 %       97.5 %
+(Intercept) 33.448457   35.6592247
+lstat       -1.026148   -0.8739505
+\end{verbatim}
+
+You can also try to use the conﬁdence interval formula above. There are $n=506$ observations in the Boston dataset. The critical value $t_{1 - \alpha / 2,n-2}$ required for the 95\% confidence interval, that is, for $\alpha=0.05$ can be found using the quantile function for the $t$ distribution \texttt{qt()}
+
+\begin{verbatim}
+    qt(0.025,504,lower.tail=FALSE)
+\end{verbatim}
+
+\begin{verbatim}
+    1.964682
+\end{verbatim}
+
+\subsubsection{Hypothesis Tests on the Coefficients}
+
+Standard errors can also be used to perform hypothesis tests on the coefficients. The most common hypothesis test involves testing the null hypothesis of
+
+\[H_0: \beta_1 = 0 \quad (\text{there is no relationship between X and Y})\]
+
+versus the alternative hypothesis
+
+\[H_1: \beta_1 \neq 0 \quad (\text{there is some relationship between X and Y}).\]
+
+For the purpose of testing the above hypothesis, we compute a t-statistic given by
+
+\[t = \frac{\hat{\beta}_1}{SE(\hat{\beta}_1)}\]
+
+which has a Student's t-distribution with \(n - 2\) degrees of freedom under \(H_0\) that there is no relationship between \(X\) and \(Y\).
+
+When \( |t| < t_{\alpha/2,n-2} \), we cannot reject the null hypothesis \( H_0 \) at the level of significance \(\alpha\). This is equivalent to the decision based on a p-value, that is, we reject \( H_0 \) if the p-value is small enough (p-value < \( \alpha \)).
+
+
+
+\end{document}
