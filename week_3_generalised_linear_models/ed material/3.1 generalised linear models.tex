@@ -1,0 +1,106 @@
+%! Author = noone
+%! Date = 1/30/24
+
+% Preamble
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage{amsmath}
+
+% Remove paragraph indentation
+\setlength{\parindent}{0pt}
+
+% Increase space between paragraphs
+\setlength{\parskip}{1em}  % Adjust the value as needed
+
+% Discourage hyphenation
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+
+% Document
+\begin{document}
+
+\section{Generalised Linear Models - Definition and Examples}
+
+\subsection{Generalised Linear Model Definition}
+
+The unity of many statistical methods was demonstrated by Nelder and Wedderburn (1972) using the idea of a generalised linear model. This model is defined in terms of a set of independent random variables each with a distribution from the $Y_1, \dots, Y_N$ exponential family and the following properties:
+
+\begin{enumerate}
+    \item The distribution of each has the canonical form and depends on a single parameter (the $\theta_i$'s do not all have to be the same) thus
+    \[ f(y_i; \theta) = \exp[y_i \theta_i - b(\theta_i) + c(\theta_i) + d(y_i)] \]
+    \item The distributions of all the $Y_i$'s are of the same form (e.g., all Gaussian or all Poisson) so that the subscripts on $b$, $c$, and $d$ are not needed. The joint density function is
+\end{enumerate}
+
+\begin{align}
+    \[ f(y_1, \dots, y_N; \theta_1, \dots, \theta_N) &= \prod_{i=1}^{N} \exp[y_i \theta_i - b(\theta_i) + c(\theta_i) + d(y_i)] \\ \]
+    \[ &= \exp \left[\sum_{i=1}^{N} y_i \theta_i - \sum_{i=1}^{N} b(\theta_i) + \sum_{i=1}^{N} c(\theta_i) + \sum_{i=1}^{N} d(y_i) \right] \]
+\end{align}
+
+(Note that this means that the responses $y_i$ are independent random variables.) The parameters $\theta_i$ are typically not of direct interest. We are usually interested in a smaller set of parameters $\beta_1, \dots, \beta_p$ where $p < N$. Suppose that $E(Y_i) = \mu_i$ is some function of $\theta_i$.
+
+For a generalised linear model, there is a transformation of $\mu_i$ such that
+
+\[ \eta_i = g(\mu_i) = x_i^T \beta \]
+
+Where
+\begin{itemize}
+    \item $g$ is a monotone differentiable function called the link function
+    \item $x_i$ is a vector of explanatory variables (or covariates) of size $p$
+    \item $x_i^T = (x_{i1}, \dots, x_{ip})$
+    \item $\beta$ is the vector of parameters. $x_i$ is the $i$-th column of the design matrix $X$.
+\end{itemize}
+
+For responses $Y_1, \dots, Y_N$, we can write a GLM in matrix notation as
+
+\[ g[E(y)] = X\beta \]
+
+where $X$ is a matrix whose elements are constants for levels of categorical explanatory variables or measured values of continuous explanatory variables. (see examples in A. J. Dobson \& A. G. Barnett (2018) pp. 58-61).
+
+\subsection{Example: Normal Linear Model}
+
+The best known case of a generalised linear model is the normal linear model where:
+
+\[ E(Y_i) = \mu_i = x_i^T \beta; \quad Y_i \sim N(\mu_i, \sigma^2) \]
+
+Here, the link function is the identity function \( g(\mu_i) = \mu_i \). This model is usually written in the form
+
+\[ y = X\beta + \epsilon \]
+
+where \(\epsilon\) is a vector of i.i.d. random variables with \(\epsilon_i \sim N(0, \sigma^2)\).
+
+In this form, the linear component represents the 'signal' and \(\epsilon\) represents the 'noise'. Multiple regression and ANOVA (analysis of variance) are of this form. We will consider them later in detail.
+
+\section{Maximum Likelihood Estimation for GLMs}
+
+\subsection{Log-likelihood for Generalised Linear Models}
+
+Let's recall the joint distribution and log-likelihood results from the previous section:
+
+\[ f(Y_1, \dots, Y_N | \theta_1, \dots, \theta_N) = \prod_{i=1}^{N} \exp[Y_i \theta_i - b(\theta_i) + c(\theta_i) + d(Y_i)] \]
+
+For each $Y_i$, the log-likelihood is given by:
+
+\[ \ell_i = Y_i \theta_i - b(\theta_i) + c(\theta_i) + d(Y_i) \]
+
+The expected value and variance of $Y_i$ are:
+
+\[ E(Y_i) = \mu_i = -\frac{c'(\theta_i)}{b'(\theta_i)}, \quad \text{and} \quad Var(Y_i) = \frac{b''(\theta_i)}{[b'(\theta_i)]^3} - \frac{c''(\theta_i)}{b'(\theta_i)} \]
+
+The log-likelihood for all the $Y_i$'s is then:
+
+\[ \ell(\theta; Y_1, \dots, Y_N) = \sum_{i=1}^{N} \ell_i = \sum_{i=1}^{N} \left[ Y_i \theta_i - b(\theta_i) + c(\theta_i) + d(Y_i) \right] \]
+
+\subsection{Score Function and Variance-Covariance Matrix}
+
+The score function is given by:
+
+\[ U_j = \sum_{i=1}^{N} \left[ \frac{(Y_i - \mu_i)}{Var(Y_i)} X_{ij} \left( \frac{d\mu_i}{d\eta_i} \right) \right] \]
+
+The variance-covariance matrix of the score is:
+
+\[ I_{jk} = \sum_{i=1}^{N} X_{ij} X_{ik} \frac{Var(Y_i)}{\left( \frac{d\mu_i}{d\eta_i} \right)^2} \]
+
+Press on the button below to read more about how to apply the method of scoring to approximate the MLE:
+
+\end{document}

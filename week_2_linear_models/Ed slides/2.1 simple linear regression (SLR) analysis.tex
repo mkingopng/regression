@@ -7,6 +7,16 @@
 % Packages
 \usepackage{amsmath}
 
+% Remove paragraph indentation
+\setlength{\parindent}{0pt}
+
+% Increase space between paragraphs
+\setlength{\parskip}{1em}  % Adjust the value as needed
+
+% Discourage hyphenation
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+
 % Document
 \begin{document}
 
@@ -338,8 +348,180 @@ For the purpose of testing the above hypothesis, we compute a t-statistic given 
 
 which has a Student's t-distribution with \(n - 2\) degrees of freedom under \(H_0\) that there is no relationship between \(X\) and \(Y\).
 
-When \( |t| < t_{\alpha/2,n-2} \), we cannot reject the null hypothesis \( H_0 \) at the level of significance \(\alpha\). This is equivalent to the decision based on a p-value, that is, we reject \( H_0 \) if the p-value is small enough (p-value < \( \alpha \)).
+When \(|t| < t_{\alpha/2,n-2}\), we cannot reject the null hypothesis \(H_0\) at the level of significance \(\alpha\). This is equivalent to the decision based on a p-value, that is, we reject \(H_0\) if the p-value is small enough (p-value < \(\alpha\)).
 
+When \(|t| < t_{\alpha/2,n-2}\), we cannot reject the null hypothesis \(H_0\) at the level of significance \(\alpha\). This is equivalent to the decision based on a p-value, that is, we reject \(H_0\) if the p-value is small enough (p-value < \(\alpha\)).
 
+This is equivalent to the decision based on a \textbf{p-value}, that is, we reject $H_0$ if p-value is small enough (ie p-value $< \alpha$)
+
+In our example (see `summary(lm.fit)` output), at the \(\alpha = 0.05\) level of significance, we can reject the null hypothesis of \( \beta_1 = 0 \) since the p-value < 0.05. The observed value of the t-statistic is -24.53, and the distribution of the test statistic is a Student's t-distribution with 504 degrees of freedom.
+
+Note that p-values of the tests \(H_0: \beta_k = 0\) vs \(H_1: \beta_k \neq 0\) (where \(k = 0, 1\)) are given in the column of Pr(> |t|).
+
+Note also that the F statistic given in the R output corresponds to $H_0$: there is no relationship between the response and the predictor $(\beta_1 = 0)$
+
+\subsection{Step 5: Assessing the Accuracy of the SLR Model}
+
+The quality of a linear regression fit is typically assessed using the residual standard error (RSE) and the $R^2$ statistic
+
+\subsubsection{Residual Standard Error (RSE)}
+
+Recall that the \textbf{residual standard error} (RSE) is an estimate of the standard deviation of \(\varepsilon\) and is given by
+
+\[RSE = \sqrt{\frac{RSS}{n - 2}} = \sqrt{\dfrac{1}{n-2} \sum_{i=1}^{n} (y_i - \hat{y_1})^2}\]
+
+The RSE is considered a measure of lack of fit of the model to the data. It is useful when comparing fits from different models. The RSE will be small for the model which fits the data well since the predictions \( \hat{y}_i \) will be close to the observations \( y_i \), resulting in a small RSE.
+
+The residual standard error in our example is 6.216, which is rather large considering that the median value of medv is 21.2. This suggests that the model does not fit the data well.
+
+\subsubsection{Coefficient of Determination (\( R^2 \))}
+
+The coefficient of determination, \(R^2\), is a measure of the contribution of the independent variable(s) in the model is the $R^2$ statistic, known as the coefficient of determination. It is defined as
+
+\[R^2 = \dfrac{TSS - RSS}{TSS}\]
+
+where \(TSS\) (Total Sum of Squares) is given by
+
+\[TSS = \sum_{i=1}^{n} (y_i - \bar{y})^2\]
+
+and \(RSS\) (Residual Sum of Squares) is given by
+
+\( RSS = \sum_{i=1}^{n} (y_i - \hat{y_i})^2\)
+
+The coefficient of determination can be interpreted in the following way:
+
+\begin{itemize}
+    \item TSS is the amount of variability inherent in the response before the regression is performed;
+    \item RSS is the amount of variability that is left unexplained after performing the regression;
+    \item \(TSS - RSS\) is the amount of variability in the response that is explained (or removed) by performing the regression;
+    \item \(R^2\) is the proportion of variability in \(Y\) that can be explained using \(X\); its value always lies between 0 and 1.
+    \item In the simple linear regression setting, \(R^2\) is equal to \(r^2\), where \(r\) is the correlation coefficient.
+\end{itemize}
+
+The \(R^2\) statistic is rather low in our example (\(R^2 = 0.5441\)), suggesting that only 54\% of the variability in \(medv\) can be explained using \(lstat\). More complex models or removing outliers might be needed to improve \(R^2\).
+
+\subsection{Step 6: Diagnostic Plots}
+
+Several potential problems may arise in linear regression. Below we list such possible issues and suggest some diagnostic plots that can be used to identify them:
+
+\begin{enumerate}
+    \item \textbf{Non-linearity of the response-predictor relationship}: residuals plots - we plot residuals $e_i = y_i - \hat{y_i}$ versus \(x_i\) or fitted values \(\hat{y}_i\). Non-linearity can be seen in the presence of a pattern such as a U-shape.
+    \item \textbf{Correlation of error terms}: If there is a time component in the data, we plot the residuals as a function of time (when data is time-dependent).
+    \item \textbf{Non-constant variance of error terms}: Residual plots can reveal heteroscedasticity, which appears as a funnel shape in the residuals versus fitted values plot.
+    \item \textbf{Outliers}: Outliers are observations for which the response is unusually far from the predicted value. Use a plot of studentized residuals computed by dividing each residual by its estimated standard error (RSE). Observations whose studentized residuals are greater than 3 in absolute value are possible outliers.
+    \item \textbf{High-leverage points}: Observations with high-leverage have an unusual value for \(x_i\). Plot studentized residuals versus the leverage statistic, defined as
+
+    \item \( h_i = \dfrac{1}{n} + \dfrac{(x_i - \bar{x})^2}{\sum_{k=1}^{n}(x_k - \bar{x})^2}\),
+
+    The leverage statistic has values between $\dfrac{1}{n}$ and $1$ with average $\dfrac{2}{n}$. If given observation has $h_i$ that exceeds 2 or 3 times the average $\dfrac{2}{n}$, then we may suspect the corresponding point has leverage
+
+    \item \textbf{Collinearity}: refers to the situation in which two or more predictor variables are closely related to one another (not the case in SLR).
+\end{enumerate}
+
+Diagnostic plots can be produced by applying the `plot()` function directly on the output from `lm()`. We will now plot mdev and lstat along with the least squares regression line:
+
+\begin{verbatim}
+library(MASS)
+lm.fit <- lm(medv ~ lstat, data=Boston)
+attach(Boston)
+plot(lstat, mdev)
+abline(lm.fit, col='red', lwd=3)
+\end{verbatim}
+
+These plots can help identify potential problems and guide further steps in the analysis.
+
+There is some evidence of non-linearity in the relationship between medv and lstat. Four diagnostic plots can be produced by applying the `plot()` function directly on the output from `lm()`:
+
+\begin{verbatim}
+library(MASS)
+lm.fit <- lm(medv ~ lstat, data=Boston)
+plot(lm.fit)
+\end{verbatim}
+
+On the basis of the residual plots, there is some evidence of non-linearity. Leverage statistics can be computed for any number of predictors using the `hatvalues()` function:
+
+\begin{verbatim}
+library(MASS)
+lm.fit <- lm(medv ~ lstat, data=Boston)
+plot(hatvalues(lm.fit))
+lines(rep(3*2/506,506),col=2)
+\end{verbatim}
+
+The red line in the plot indicates the $3 \times 2/n$ level. To identify the index of the largest element of a vector of
+leverage statistics we used the function `which.max()`.
+
+\begin{verbatim}
+library(MASS)
+lm.fit<-lm(medv~lstat,data=Boston)
+which.max(hatvalues(lm.fit))
+\end{verbatim}
+
+\begin{verbatim}
+375
+375
+\end{verbatim}
+
+Note also that we can use the `names()` function to show what other information is stored in `lm.fit`:
+
+\begin{verbatim}
+library(MASS)
+lm.fit<-lm(medv~lstat,data=Boston)
+\end{verbatim}
+
+\begin{verbatim}
+names(lm.fit)
+
+lm.fit$coefficients
+\end{verbatim}
+
+\begin{verbatim}
+[1] "coefficients" "residuals" "effects" "rank"
+[5] "fitted.values" "assign" "qr" "df.residual"
+[9] "xlevels" "call" "terms" "model"
+(Intercept)    lstat
+34.5538409 -0.9500494
+\end{verbatim}
+
+\subsection{Step 7: Prediction}
+
+Let us now use the \texttt{predict()} function to calculate the predicted value of \texttt{medv} for \texttt{lstat} equal to 5, 10, and 15. For example, the predicted value of \texttt{medv} is 25.05 when \texttt{lstat} equals 10.
+
+\begin{verbatim}
+library(MASS)
+lm.fit <- lm(medv ~ lstat, data=Boston)
+predict(lm.fit, data.frame(lstat=c(5,10,15)))
+\end{verbatim}
+
+The output is:
+
+\begin{verbatim}
+       1        2        3
+29.80359 25.05335 20.30310
+\end{verbatim}
+
+The \texttt{predict()} function can also be used to produce confidence intervals and prediction intervals for the predicted value of \texttt{medv} for \texttt{lstat} equal to 5, 10, and 15. For example, the 95\% confidence interval associated with an \texttt{lstat} value of 10 is \([24.47, 25.63]\) and the 95\% prediction interval is \([12.83, 37.28]\). Both intervals are centered around 25.05, which is the predicted value of \texttt{medv} when \texttt{lstat} equals 10.
+
+\begin{verbatim}
+library(MASS)
+lm.fit <- lm(medv ~ lstat, data=Boston)
+predict(lm.fit, data.frame(lstat=c(5,10,15)), interval="confidence")
+predict(lm.fit, data.frame(lstat=c(5,10,15)), interval="prediction")
+\end{verbatim}
+
+The output is:
+
+\begin{verbatim}
+        fit       lwr       upr
+1 29.80359 29.00741 30.59978
+2 25.05335 24.47413 25.63256
+3 20.30310 19.73159 20.87461
+
+        fit       lwr       upr
+1 29.80359 17.565675 42.04151
+2 25.05335 12.827626 37.27907
+3 20.30310  8.077742 32.52846
+\end{verbatim}
+
+This section outlines how to use the \texttt{predict()} function in R for making predictions with a simple linear regression model, including generating confidence and prediction intervals. Let me know if you need further transcription or have any questions about this section.
 
 \end{document}

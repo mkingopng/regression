@@ -1,0 +1,384 @@
+%! Author = noone
+%! Date = 1/30/24
+
+% Preamble
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage{amsmath}
+
+% Remove paragraph indentation
+\setlength{\parindent}{0pt}
+
+% Increase space between paragraphs
+\setlength{\parskip}{1em}  % Adjust the value as needed
+
+% Discourage hyphenation
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+
+% Document
+\begin{document}
+
+
+\section{Logistic Regression}
+
+\subsection{General logistic regression}
+
+We now focus on models where the outcome variables are measured on a binary scale.
+
+We define a \textbf{binary random variable}
+
+\[
+Y =
+\begin{cases}
+1 & \text{if the outcome is a “success” } \pi \\
+0 & \text{if the outcome is a “failure” } (1 - \pi)
+\end{cases}
+\]
+(i.e., has a Bernoulli distribution).
+
+\textbf{Goal:}
+
+The goal of the analysis is to relate the probability of the Bernoulli distribution to a set of explanatory variables, i.e., $x_i^T$.
+
+\[ \Pr(Y_i = 1 | X_{i1}, \ldots, X_{ip}) = \pi_i \quad \text{for } i = 1, \ldots, N \]
+
+The \textbf{joint likelihood function} is:
+
+\begin{align}
+    f(Y_1, \ldots, Y_N | \pi) &= \prod_{i=1}^N \pi_i^{Y_i} (1 - \pi_i)^{1-Y_i} \\
+    &= \exp \left[ \sum_{i=1}^N Y_i \log \left( \frac{\pi_i}{1 - \pi_i} \right) + \sum_{i=1}^N \log(1 - \pi_i) \right] \\
+\end{align}
+
+We want to describe the probability of success with respect to some predictors:
+\[ g(\pi_i) = x_i^T \beta \]
+
+So to take into consideration that:
+\begin{itemize}
+    \item The response variable is \textbf{binary} and not continuous.
+    \item The response variable is \textbf{bounded} (in [0, 1]).
+    \item The variance is not constant $\mathbb{V}\text{ar}(Y_i) = \pi_i(1 - \pi_i)$.
+\end{itemize}
+
+Similar considerations apply to ordinal response variables.
+
+\subsection{Example: Default Prediction}
+
+Consider the \texttt{Default} dataset from the \texttt{ISLR} package in R. We want to estimate the probability of default as a function of balance.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.8\textwidth]{Fig3.2.1.png}
+\caption{Estimated probability of default using linear (left) and logistic (right) regression.}
+\end{figure}
+
+The following code can be used to replicate the previous plots:
+
+\begin{verbatim}
+library(ISLR)
+data("Default")
+attach(Default)
+
+default.bin <- rep(0, length(default)) # initialise binary vector
+default.bin[default == "Yes"] <- 1
+
+par(mfrow = c(1, 2)) # To put the plots next to each other
+
+# Linear model
+lm <- lm(default.bin ~ balance)
+plot(balance, default.bin, pch = 3, col = "orange",
+     xlab = "Balance", ylab = "Probability of Default")
+abline(h = c(0, 1), lty = 2)
+abline(a = lm$coefficients[1], b = lm$coefficients[2], col = "blue", lwd = 3)
+
+# Logistic model
+log <- glm(default.bin ~ balance, family = "binomial")
+o <- order(balance)
+plot(balance, default.bin, pch = 3, col = "orange",
+     xlab = "Balance", ylab = "Probability of Default")
+abline(h = c(0, 1), lty = 2)
+lines(balance[o], log$fitted.values[o], col = "blue", lwd = 3)
+\end{verbatim}
+
+\subsubsection{1.1 Example}
+
+We want to predict the medical condition of a patient in the emergency room on the basis of symptoms. Let's suppose we have three possible diagnoses:
+\[
+Y =
+\begin{cases}
+1 & \text{stroke} \\
+2 & \text{drug overdose} \\
+3 & \text{epileptic seizure}
+\end{cases}
+\]
+
+Using a linear regression would assume
+\begin{itemize}
+    \item the ordering is meaningful: numbers 1, 2, and 3 are just labels!
+    \item The difference between "stroke" and "drug overdose" has the same meaning than that between "drug overdose" and "epileptic seizure".
+\end{itemize}
+
+The general logistic regression model is
+
+\[ \text{logit}(\pi_i) = \log \left( \frac{\pi_i}{1 - \pi_i} \right) = x_i^T \beta \]
+
+where $x_i$ is a vector of either continuous measurements or categorical variables, and $\beta$ is a parameter vector. Recall that $\frac{\pi_i}{1-\pi_i}$ is an odds taking value between 0 and $\infty$, indicating very low and very high probabilities of default. This means that
+
+\begin{aligned}
+    \frac{\pi_i}{1 - \pi_i} &= \exp(x_i^T \beta) \\
+    \pi_i &= \exp[x_i^T \beta] - \pi_i \exp [x_i^T \beta] \\
+    (1 + \exp[x_i^T \beta]) \pi_i &= \exp[x_i^T \beta] \\
+    \pi_i &= \frac{\exp[x_i^T \beta]}{1 + \exp[x_i^T \beta]}
+\end{aligned}
+
+and the \textbf{log-likelihood} can be rewritten with respect to $\beta$
+
+\[ \pi_i = \frac{\exp(x_i^T \beta)}{1 + \exp(x_i^T \beta)} \]
+
+The estimation process is the same if $Y_i$ is binomially distributed instead of Bernoulli distributed, with the corresponding modification to consider the number of trials
+
+If the goal is \textbf{prediction}. one might predict:
+
+\[ Y_{N + 1} = 1 \quad \textbf{if} \quad \pi_{N + 1} | x_{N + 1}^{T} > 0.5\]
+
+However, other thresholds could be used, eg if we want to be particularly conservative, we can set the threshold to 0.1
+
+\subsubsection{1.2 Example}
+
+The trade union data are collected from 1985 and available in the \texttt{SemiPar} package in R. The variable \texttt{union.member} is binary, while variables \texttt{age} and \texttt{wages} are continuous. We illustrate the model comparison with this data set.
+
+The figure below shows logistic regression fitted to the two variables separately with union membership as the response.
+
+The code below fits the logistic regression model, displays the fitted line, and prints the output.
+
+\begin{verbatim}
+library(SemiPar)
+data("trade.union")
+attach(trade.union)
+
+# Logistic regression model for union membership based on wage
+union.wage.glm <- glm(union.member ~ wage, family = "binomial")
+o <- order(wage)
+plot(wage, union.member, main = "Trade Union Dataset", pch = 3,
+     ylab = "Union Membership", xlab = "Wage", col = "orange")
+abline(h = c(0, 1), lty = 2)
+lines(wage[o], union.wage.glm$fitted.values[o], col = "blue", lwd = 3)
+
+# Logistic regression model for union membership based on age
+union.age.glm <- glm(union.member ~ age, family = "binomial")
+o <- order(age)
+plot(jitter(age), union.member, main = "Trade Union Dataset", pch = 3,
+     ylab = "Union Membership", xlab = "Age", col = "orange")
+abline(h = c(0, 1), lty = 2)
+lines(age[o], union.age.glm$fitted.values[o], col = "blue", lwd = 3)
+
+summary(union.wage.glm)
+summary(union.age.glm)
+\end{verbatim}
+
+Both age and wage seem to be significant, so let's fit a model with both parameters.
+
+\begin{verbatim}
+library(SemiPar)
+data("trade.union")
+attach(trade.union)
+
+# Combined logistic regression model for union membership based on wage and age
+union.wage.age.glm <- glm(union.member ~ wage + age, family = "binomial")
+summary(union.wage.age.glm)
+\end{verbatim}
+
+\section{Prediction}
+
+Once the coefficients have been estimated, predictions are obtained by using those estimates with the desired level of predictors.
+
+\subsection{Example: Analysis of Trade Union Dataset}
+
+If we want to predict the probability of union membership for someone who is 56 years old and has a wage of \$6.5, we compute:
+
+\[
+\pi_{\text{new}} = \frac{1}{1 + \exp(-(\beta_0 + \beta_1 \times 6.5 + \beta_2 \times 56))}
+\]
+
+Where \(\beta_0\), \(\beta_1\), and \(\beta_2\) are the coefficients estimated from the logistic regression model.
+
+The R code to compute this probability:
+
+\begin{verbatim}
+library(SemiPar)
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family = "binomial")
+p_pred <- 1 / (1 + exp(-(union.wage.age.glm$coefficients[1]
+            + union.wage.age.glm$coefficients[2] * 6.5
+            + union.wage.age.glm$coefficients[3] * 56)))
+p_pred
+\end{verbatim}
+
+The \(\pi_{\text{new}}\) value indicates the predicted probability of being a union member. If this value is greater than 0.5, we might classify the individual as a likely union member.
+
+\subsection{Goodness of Fit}
+
+Goodness of fit in logistic regression models can be assessed using various methods. These methods help in understanding how well the model fits the data.
+
+\subsection{Pearson Chi-Squared Statistic}
+
+For the binomial model, Pearson residuals can be calculated. They are defined as:
+
+\[
+r_i = \frac{y_i - n_i \hat{\pi}_i}{\sqrt{n_i \hat{\pi}_i (1 - \hat{\pi}_i)}}
+\]
+
+The sum of the squares of these residuals forms the Pearson chi-squared statistic, which is used to assess the goodness of fit.
+
+\begin{verbatim}
+# R code to calculate Pearson chi-squared statistic
+pearson_res <- residuals(model, type = "pearson")
+pearson_chi_sq <- sum(pearson_res^2)
+\end{verbatim}
+
+\subsection{Deviance}
+
+Deviance is another measure of goodness of fit. It is a generalization of the residual sum of squares in linear regression and for Logistic regression it is defined as:
+
+\[ D = -2 \sum_{i=1}^N \left[ y_i \log \left( \dfrac{y_i}{n_i \hat{\pi}_i} \right) + (n_i - y_i) \log \left( \dfrac{n_i - y_i}{n_i - n_i \hat{\pi_i}} \right) \right] \]
+
+Where \(N\) is the number of observations. A lower value of deviance indicates a better fit.
+
+It is possible to prove that the deviance is asymptotically equivalent to the pearson chi-squared statistic evaluated at the estimated expected frequencies.
+
+Under the null hypothesis $H_0$, the asymptotic distribution of $D$ is
+
+\[ D \sim \chi^2 (N-p)\]
+
+Therefore $D \sim \chi^2 (N - p)$. The adequacy of the approximation depends on how well $D$ or $P^2$ are $\chi^2$ distributed. There is some evidence that $P^2$ is better than $D$, however both of them are influenced by small frequencies. This is typical of continuous coviariates
+
+\subsection{Example - Analysis of trade union dataset}
+
+
+We fitted the logistic model (M1):
+
+\[ \log \left( \frac{\pi_i}{1 - \pi_i} \right) = \beta_0 + \beta_1 \text{wage} + \beta_2 \text{age} \]
+
+where \(\pi_i\) is the probability of union membership (3 params). The observed deviance is \(d_1 = 485.5239\).
+
+Compare with the nested model (M0):
+
+\[ \log \left( \frac{\pi_i}{1 - \pi_i} \right) = \beta_0 \]
+
+where the probability of trade union membership is constant (1 param). The observed deviance is \(d_0 = 503.0841\).
+
+We wish to test
+
+\begin{center}
+    \( H_0 : \beta_1 = \beta_2 = 0\) \\
+    \( H_1 : \beta_1, \beta_2\) \text{not both zero} \\
+\end{center}
+
+If \(H_0\) was true, then both models describe the data well. We would have \(D_0 \sim \chi^2(N - 1)\), \(D_1 \sim \chi^2(N - 3)\) so that \(D_0 - D_1 \sim \chi^2(2)\). However, we observe
+
+\begin{center}
+\(d_0 - d_1 = 503.0841 - 485.5239 = 17.56029\),
+\end{center}
+
+which is larger than the 95\%-quantile of \(\chi^2_2 = 5.9914645\). Hence, we reject \(H_0\) at the 5\% significance level.
+
+This code reproduce the calculations of the previous example
+
+\begin{verbatim}
+library(SemiPar)
+data("trade.union")
+attach(trade.union)
+
+union.wage.age.glm <- glm(union.member ~ wage + age, family="binomial")
+d0 <- union.wage.age.glm$null.deviance
+d1 <- union.wage.age.glm$deviance
+
+alpha <- 0.05
+crit.val <- qchisq(1-alpha, df=2)
+if(d0-d1 > crit.val){
+    cat("We reject H0 at alpha=", alpha, "significance level.")
+}else{
+    cat("We cannot reject H0 at alpha=", alpha, "significance level.")
+}
+\end{verbatim}
+
+\subsection{Hosmer-Lemeshow Statistic}
+
+A possible solution to assess the goodness of fit is to \textbf{group observations} with approximately equal numbers in each group. Then, the Pearson chi-squared statistic is computed on the contingency table obtained by grouping. This statistic is known as the \textbf{Hosmer-Lemeshow statistic}.
+
+The following R code can be used for this analysis:
+\begin{verbatim}
+library(SemiPar)
+library(doBy)
+
+data("trade.union")
+attach(trade.union)
+
+# Grouping observations by wage and calculating sum and length for "union.member"
+uniongrp <- summaryBy(union.member ~ wage, data=trade.union,
+                      FUN=c(sum, length))
+names(uniongrp) <- c("wage", "sum_union_member", "n")
+head(uniongrp)
+
+# Fitting the logistic model to the grouped data
+union.grp.glm <- glm(cbind(sum_union_member, n - sum_union_member) ~ wage,
+                     family=binomial)
+summary(union.grp.glm)
+\end{verbatim}
+
+This demonstrates how to apply the Hosmer-Lemeshow statistic in logistic regression analysis, using the 'trade.union' dataset as an example. The method involves grouping observations, fitting the logistic model to these groups, and then evaluating the model's goodness of fit.
+
+The estimates and standard errors are the same but the goodness of fit differ.
+
+\subsection{3.4 Likelihood Ratio, Pseudo R\(^2\), AIC, and BIC}
+
+\subsubsection{Likelihood Ratio Test}
+The likelihood ratio test is used for comparing the goodness of fit of two models. It is based on the difference in log-likelihoods of the nested models. The test statistic is calculated as
+\[
+LR = -2(\log(\mathcal{L}(\text{model}_0)) - \log(\mathcal{L}(\text{model}_1)))
+\]
+where \(\log(\mathcal{L}(\text{model}_0))\) is the log-likelihood of the simpler model and \(\log(\mathcal{L}(\text{model}_1))\) is that of the more complex model.
+
+\subsubsection{Pseudo R\(^2\)}
+Pseudo R\(^2\) provides an estimate of the proportion of variance explained by the model in logistic regression. It is not directly comparable to R\(^2\) in linear regression. One common form is McFadden's R\(^2\) given by
+
+\[ R^2_{\text{pseudo}} = 1 - \frac{\log(\mathcal{L}(\text{model}_1))}{\log(\mathcal{L}(\text{model}_0))} \]
+
+\subsubsection{AIC and BIC}
+The Akaike Information Criterion (AIC) and Bayesian Information Criterion (BIC) are measures for model selection. They are defined as:
+
+\[ \text{AIC} = -2 \log(\mathcal{L}(\text{model})) + 2k \]
+
+\[ \text{BIC} = -2 \log(\mathcal{L}(\text{model})) + k \log(n) \]
+
+where \(k\) is the number of parameters in the model and \(n\) is the sample size. Lower values of AIC and BIC suggest a better model fit.
+
+\subsubsection{R Code for Model Assessment}
+\begin{verbatim}
+# Fit logistic regression model
+model <- glm(y ~ x1 + x2, family = binomial, data = data)
+
+# Log-likelihood of null model (intercept only)
+logLik_null <- logLik(glm(y ~ 1, family = binomial, data = data))
+
+# Log-likelihood of full model
+logLik_full <- logLik(model)
+
+# Likelihood Ratio Test
+LR <- -2 * (logLik_null - logLik_full)
+
+# Pseudo R-squared (McFadden)
+pseudo_R2 <- 1 - (logLik_full / logLik_null)
+
+# AIC and BIC
+AIC_model <- AIC(model)
+BIC_model <- BIC(model)
+\end{verbatim}
+
+This section covers methods for assessing the fit of logistic regression models, including likelihood ratio tests, pseudo R\(^2\), AIC, and BIC, along with their respective R code implementations.
+
+
+\end{document}
