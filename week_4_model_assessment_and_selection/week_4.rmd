@@ -566,7 +566,7 @@ Find the ridge estimators for the coefficients of the standardised predictors wh
 Compare the parameter estimates with the estimates obtained from glmnet() function. Are they approximately the same? Note that to compare glmnet() to other methods authors of glmnet() suggest to standardise the response variable, too.
 
 ```{r}
-hald<-read.table("hald.txt",header=T)
+hald<-read.table("../data/hald.txt", header=T)
 
 print(dim(hald))
 
