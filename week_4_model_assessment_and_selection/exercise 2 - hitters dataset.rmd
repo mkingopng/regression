@@ -22,19 +22,21 @@ the `regsubsets()` function from the `R` package `leaps` to perform best
 subset selection by identifying the best model that contains a given number
 of predictors, where best is quantified using RSS
 
-Questions:
-    - a) load the hitters data and remove the NA values
-    - b) load the leaps package and use the `regsubsets()` and learn how to use
-    the function. Print the output of the variable selection when the aim is to
-    model the variable salary. What are the predictors contained in the best 2
-    variable model?
-    - c) the `summary` function also returns R2, RSS, R2 adjusted Cp and BIC
-    (hit: try typing `names(object)` where `object` is the object created by
-    the `summary()` function). Re-run the model selection ensuring that all
-    predictors are included `(nvmax=19)` and examine these by plotting them
-    (all except for R2) as a function of the number of variables. What is the
-    best model according to the R2 adjusted, Cp and BIC, and what is the
-    estimated regression equation?
+## Questions:
+- load the hitters data and remove the NA values
+- load the leaps package and use the `regsubsets()` and learn how to use
+the function. Print the output of the variable selection when the aim is to
+model the variable salary. What are the predictors contained in the best 2
+variable model?
+- the `summary` function also returns R2, RSS, R2 adjusted Cp and BIC
+(hit: try typing `names(object)` where `object` is the object created by
+the `summary()` function). Re-run the model selection ensuring that all
+predictors are included `(nvmax=19)` and examine these by plotting them
+(all except for R2) as a function of the number of variables. What is the
+best model according to the R2 adjusted, Cp and BIC, and what is the
+estimated regression equation?
+
+Loading the Hitters data from the ISLR package and removing NA values, specifically from the Salary column. After removal, the dataset has 263 observations out of the original 322, each with 20 predictors.
 
 ## a) solution
 
@@ -81,6 +83,13 @@ sum(is.na(Hitters))
 ## [1] 0
 ```
 
+Performing Best Subset Selection:
+
+- Using the `leaps` package and the `regsubsets()` function to perform best
+subset selection. This involves fitting models that include every possible combination of the predictors and identifying the best model with a given number of predictors based on the Residual Sum of Squares (RSS).
+- The output for the best 2-variable model is obtained by examining the
+summary of the `regsubsets` object. The predictors in the best 2-variable model are identified from this summary.
+
 ## b) question
 load the leaps package and use the `regsubsets()` and learn how to use
 the function. Print the output of the variable selection when the aim is to
@@ -96,6 +105,14 @@ library(leaps)
 regfit.full <- regsubsets(Salary~., Hitters)
 summary(regfit.full)
 ```
+
+## Evaluating Model Metrics:
+- Re-running the model selection with nvmax=19 to ensure all predictors are
+considered. The `summary()` function's output includes R-squared, RSS, Adjusted R-squared, Cp, and BIC for each model with different numbers of predictors.
+- Plotting these metrics as a function of the number of variables helps
+visualize how model performance changes with the inclusion of additional predictors.
+- Identifying the best model according to Adjusted R-squared, Cp, and BIC
+involves looking for the highest Adjusted R-squared, the lowest Cp, and the lowest BIC. The `coef()` function with the number of variables corresponding to the best model by each criterion gives the estimated regression equation for those models.
 
 # c) question:
 the `summary` function also returns R2, RSS, R2 adjusted Cp and BIC
@@ -131,25 +148,23 @@ adj R2
 
 ```{r}
 # which.max(reg.sum$adjr2)
-
 coef(regfit.full,11)
 ```
 
-Mallows Cp
+# Mallows Cp
 - gives beta hat vector for the estimated regression equation
 
 ```{r}
 # which.min(reg.sum$cp)
-
 coef(regfit.full, 10)
 ```
 
-BIC
+# BIC
 - gives beta hat vector for the estimated regression equation
 
 ```{r}
 # which.min(reg.sum$bic)
-
 coef(regfit.full, 6)
 ```
 
+This exercise provides a comprehensive understanding of how to perform and interpret best subset selection for linear regression modeling, teaching important aspects of model selection and evaluation in statistical analysis.

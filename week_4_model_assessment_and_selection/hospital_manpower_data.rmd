@@ -1,0 +1,151 @@
+---
+title: "Hospital Manpower Data"
+output: html_notebook
+---
+
+# example: hospital manpower data
+
+```{r}
+require(bestglm)
+data(manpower)
+```
+
+Cell 2 performs the initial ridge regression analysis using the `manpower` dataset. Here's a step-by-step explanation of what happens in this cell:
+
+1. **Data Preparation**:
+   - The independent variables are extracted and stored in `x` as a matrix, which includes the first four columns of the `manpower` dataset. This implies that these columns are the predictors in the analysis.
+   - The dependent variable, `Hours`, is transformed using the natural logarithm to potentially stabilize variance and linearize relationships. This transformed variable is stored in `y`.
+
+2. **Defining Regularization Strengths**:
+   - A sequence of `lambda` values is created using `exp(seq(-6, 6, 0.2))`. These values are the regularization strengths used in ridge regression. The sequence is designed to cover a wide range of values, from very small to very large, on an exponential scale.
+
+3. **Fitting the Ridge Regression Model**:
+   - The `glmnet` function is called to fit the ridge regression model (`alpha=0` specifies ridge regression). The function uses the predictors `x`, the response variable `y`, and the defined `lambda` sequence. The model will fit a separate regression for each value of `lambda`.
+
+4. **Plotting the Results**:
+   - The `plot` function is called on the `fit` object, with `xvar="lambda"` to plot the coefficients of the model as a function of `lambda`. The `label=T` argument labels each line, making it easier to identify which coefficient corresponds to which variable.
+
+### Purpose and Insights:
+
+- **Regularization Path**: The plot generated from this cell visually represents the "regularization path" of each predictor's coefficient. As `lambda` increases, the regularization effect becomes stronger, shrinking the coefficients towards zero. This helps in understanding how each predictor's influence changes with different levels of regularization.
+- **Model Complexity**: By observing how coefficients shrink as `lambda` increases, analysts can get a sense of which predictors remain significant under strong regularization, highlighting their relative importance in predicting the response variable.
+
+This step is crucial for understanding the impact of regularization on the predictors and sets the stage for selecting an optimal `lambda` value through cross-validation, which is explored in subsequent cells.
+
+```{r}
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
+fit <- glmnet(x, y, alpha=0, lambda=lambda)
+plot(fit,xvar="lambda",label=T)
+```
+
+Cell 3 in your notebook is about performing cross-validation to select the optimal regularization parameter, \(\lambda\), for ridge regression using the `cv.glmnet` function. Here's a breakdown of what's happening in this cell:
+
+1. **Data Preparation**: Similar to the previous step, the predictors (`x`) are prepared as a matrix, and the response variable (`y`) is the logarithm of the `Hours` worked, derived from the `manpower` dataset.
+
+2. **Lambda Range**: A range of \(\lambda\) values is defined, just like in the previous cell. These values are used to explore different levels of regularization strength in the ridge regression model.
+
+3. **Cross-Validation with `cv.glmnet`**:
+    - The `cv.glmnet` function is used to perform 5-fold cross-validation across the specified range of \(\lambda\) values. This function evaluates the model at each \(\lambda\) value, splitting the data into five parts, using four for training and one for validation, and rotating this process so each part is used for validation exactly once.
+    - The goal of cross-validation here is to find the value of \(\lambda\) that minimizes the cross-validated mean squared error (MSE). The `cv.glmnet` function automatically computes this and provides the optimal \(\lambda\) for the lowest MSE.
+
+4. **Plotting Cross-Validation Results**:
+    - The `plot` function is called on the `cv.fit` object returned by `cv.glmnet`, which visualizes the relationship between \(\lambda\) and the cross-validated MSE. This plot typically shows the MSE decreasing and then increasing as \(\lambda\) increases, with a marked point indicating the \(\lambda\) that results in the lowest MSE.
+    - The plot helps in visually confirming the choice of \(\lambda\), ensuring that the model is neither underfitting (too little regularization) nor overfitting (too much regularization).
+
+This step is crucial for regularized regression models like ridge regression, as selecting the appropriate \(\lambda\) greatly influences the model's performance. By minimizing cross-validated MSE, you aim to improve the model's generalization ability to unseen data.
+
+```{r}
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
+set.seed(1) # For reproducibility
+cv.fit <- cv.glmnet(x, y, alpha=0, nfolds=5, lambda=lambda)
+plot(cv.fit)
+```
+
+Cell 4 performs a critical step in the regularization process using cross-validation with the `cv.glmnet` function. It specifically extracts the optimal value of `lambda` (denoted as `lambda.min`) that minimizes the cross-validated mean squared error (MSE). This value of `lambda` represents the best trade-off between bias and variance, according to the model's performance on the cross-validation sets.
+
+Here's a breakdown of what happens in this cell:
+
+- The same setup from previous steps is used to prepare the predictors `x` and the response variable `y` (the logarithm of `Hours`).
+- A sequence of `lambda` values is defined again, which are used in the ridge regression model.
+- The `cv.glmnet` function is invoked with `alpha=0` to specify ridge regression and `nfolds=5` to perform 5-fold cross-validation across the defined `lambda` sequence. The same random seed is set for reproducibility of the results.
+- The optimal `lambda` that minimizes the MSE in cross-validation is stored in the variable `lambda`, overwriting the previous sequence of lambda values. This `lambda` is printed out and represents the regularization strength that should be used in the final model to achieve the best balance between simplicity and prediction accuracy.
+
+This step is crucial for understanding which level of regularization yields the most reliable predictions when the model is applied to new, unseen data.
+
+```{r}
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
+
+set.seed(1) # For reproducibility
+cv.fit <- cv.glmnet(x, y, alpha=0, nfolds=5, lambda=lambda)
+lambda <- cv.fit$lambda.min
+lambda
+```
+
+Cell 5 in the sequence is focused on finding an alternative regularization strength (\(\lambda\)) using a more conservative criterion than the one that minimizes the cross-validated mean squared error (MSE). Here's a detailed breakdown:
+
+### Objective
+- **Find a conservative \(\lambda\)**: This cell aims to find the \(\lambda\) value, referred to as `lambda.1se`, which is associated with the model within one standard error of the minimum MSE from the cross-validation process. This approach aims to prefer simpler models, potentially with slightly higher error but possibly better generalization capability.
+
+### Process
+- **Re-use of Cross-Validation Setup**: Similar to previous cells, it uses the `cv.glmnet` function with the same parameters (including `alpha=0` for ridge regression, `nfolds=5` for 5-fold cross-validation, and the same `lambda` sequence). The key difference is the extraction of `lambda.1se` after cross-validation.
+- **Extraction of `lambda.1se`**: The `lambda.1se` extracted from the `cv.fit` object represents the most regularized model within one standard error of the optimal model (the one with the minimum cross-validated MSE). This choice is based on a trade-off between model complexity and prediction error, leaning towards simplicity and robustness.
+
+### Significance
+- **Model Selection Criterion**: Selecting `lambda.1se` over `lambda.min` is a strategy that can lead to simpler models by accepting a slight increase in error for a reduction in model complexity. This is often used to enhance the model's interpretability and generalizability, especially in contexts where overfitting is a concern or when a more parsimonious model is desirable.
+
+### Outcome
+- This cell does not output a model directly but identifies a specific value of \(\lambda\) (`lambda.1se`) that can be used for fitting a ridge regression model that is expected to be robust and potentially more generalizable, albeit possibly with a slight sacrifice in fitting to the training data.
+
+```{r}
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
+
+set.seed(1) # For reproducibility
+cv.fit <- cv.glmnet(x, y, alpha=0, nfolds=5, lambda=lambda)
+lambda <- cv.fit$lambda.1se
+lambda
+```
+
+Cell 6 is focused on extracting and analyzing the coefficients from the ridge regression model fitted with the `glmnet` function, specifically at the lambda value that results in the minimum cross-validation error (as identified in previous steps). Here's a step-by-step breakdown of what's happening in this cell:
+
+1. **Preparation of Data**:
+    - Similar to previous cells, independent variables are organized into a matrix `x`, and the response variable `y` is the logarithm of the `Hours` column from the `manpower` dataset.
+
+2. **Lambda Range Definition**:
+    - A range of lambda values is defined, exponentially spaced between \(e^{-6}\) and \(e^{6}\), to explore a wide spectrum of regularization strengths.
+
+3. **Ridge Regression Model Fitting**:
+    - The `glmnet` function is called to fit a ridge regression model (`alpha=0` indicates ridge regression) across the defined range of lambda values.
+
+4. **Cross-validation for Optimal Lambda**:
+    - The `cv.glmnet` function performs 5-fold cross-validation to identify the optimal lambda value that minimizes the cross-validation error. This step ensures the model's generalization ability is maximized by finding an appropriate level of regularization.
+
+5. **Extraction of Coefficients**:
+    - The model's coefficients at the lambda that minimizes the cross-validation error are extracted. This includes both the slope coefficients (`fit$beta`) and the intercept (`fit$a0`).
+    - `cv.fit$index[,1]` is used to identify the column index in `fit$beta` and the element in `fit$a0` corresponding to this optimal lambda value.
+
+The key outcomes from this cell are the slope coefficients and intercept of the ridge regression model at the optimal level of regularization. These coefficients represent the log-transformed relationship between the independent variables and the response variable, adjusted for multicollinearity and overfitting through regularization.
+
+This final step is crucial for interpreting the model, as it allows you to understand how each predictor variable influences the logarithm of working hours in the `manpower` dataset, after accounting for the regularization effect imposed by ridge regression.
+
+```{r}
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
+
+fit <- glmnet(x, y, alpha=0, lambda=lambda)
+
+set.seed(1) # For reproducibility
+cv.fit <- cv.glmnet(x, y, alpha=0, nfolds=5, lambda=lambda)
+
+fit$beta[,cv.fit$index[,1]]
+fit$a0[cv.fit$index[,1]]
+```
+

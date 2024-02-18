@@ -1,0 +1,72 @@
+---
+title: "mos example"
+output: html_notebook
+---
+# MOS EXAMPLE
+The dataset appears to contain information on maximum temperature (Maxtemp) and other predictors. The example showcases different techniques for model fitting, cross-validation, and model simplification or expansion. Let's break it down:
+
+# activity: Cross Validation using mos
+
+```{r}
+mos.df<-read.table("data/mos_df.txt", header=TRUE, quote="\"")
+library(boot)
+```
+
+## Cross-validation for Error Estimation
+- The boot library is used to perform 10-fold cross-validation on a generalized linear model (GLM) fitted with Maxtemp as the response variable and all other variables in mos.df as predictors. The purpose here is to estimate the prediction error (cv.error) of the model.
+
+```{r}
+glm.fit <- glm(Maxtemp~., data=mos.df)
+cv.error <- cv.glm(mos.df, glm.fit, K=10)$delta[1]
+cv.error
+```
+
+## Model Simplification with drop1
+The drop1 function is used to iteratively examine the effect of dropping each predictor on the model's fit. This is done by fitting a linear model with Maxtemp as the response variable and then testing the removal of predictors not specified in the scope formula. This step is aimed at identifying which variables, if any, could be removed without significantly reducing the model's explanatory power.
+
+```{r}
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
+mos.lm <- lm(Maxtemp ~ ., mos.df)
+
+drop1(mos.lm, scope~Modst+Modsp+Modthik)
+```
+
+
+```{r}
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
+mos2.lm <- lm(Maxtemp ~ Modsp + Modthik, mos.df)
+
+drop1(mos2.lm, scope~Modsp+Modthik)
+```
+
+# Model Expansion with add1
+Conversely, add1 is employed to assess the impact of adding additional predictors to a simpler model. Initially, a model with only an intercept (lm(Maxtemp~1,mos.df)) is considered, and predictors are added one by one based on the scope formula. This process helps identify which variables, when added to the model, significantly improve its fit.
+
+```{r}
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
+mos.lm <- lm(Maxtemp~1,mos.df)
+add1(mos.lm,scope~Modst+Modsp+Modthik)
+```
+
+# Sequential Model Refinement
+The process iteratively refines models by either adding or removing predictors based on statistical criteria, moving from simpler models to more complex ones or vice versa. This iterative process helps in understanding the contribution of each predictor to the model's performance.
+
+```{r}
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
+mos2.lm <- lm(Maxtemp~Modthik,mos.df)
+add1(mos2.lm, scope~Modst+Modsp+Modthik)
+```
+
+
+
+```{r}
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
+mos3.lm <- lm(Maxtemp~Modthik+Modsp,mos.df)
+add1(mos3.lm, scope~Modst+Modsp+Modthik)
+```
+
+# Key Takeaways
+- Cross-validation is used as a tool for estimating the predictive performance of models, ensuring that the selection of predictors is not just based on the training data but also on how well the model generalizes to unseen data.
+- Model simplification (via drop1) and model expansion (via add1) are demonstrated as techniques to explore the space of possible models systematically. These approaches aim to find a balance between model simplicity (avoiding overfitting) and explanatory power (capturing significant relationships in the data).
+
+This example provides a practical illustration of model selection techniques in R, highlighting the importance of cross-validation and stepwise model refinement (both simplification and expansion) in the context of linear modeling.

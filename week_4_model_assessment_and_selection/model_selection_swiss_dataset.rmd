@@ -34,6 +34,13 @@ Hint: Use functions `AIC()` and `BIC()` for this exercise.
 # solution
 
 ```{r}
+library(datasets) # Load the datasets package, if not already loaded
+data(swiss)  # Access the Swiss dataset
+attach(swiss)  # Attach the dataset to the search path
+head(swiss)  # View the first few rows of the dataset
+```
+
+```{r}
 lm1 <- lm(Fertility ~ . , data = swiss)
 lm2 <- update(lm1, . ~ . -Examination)
 
@@ -41,12 +48,17 @@ AIC(lm1, lm2)
 ##     df      AIC
 ## lm1  7 326.0716
 ## lm2  6 325.2408
+```
 
+
+
+```{r}
 BIC(lm1, lm2)
 ##     df      BIC
 ## lm1  7 339.0226
 ## lm2  6 336.3417
 ```
+
 
 
 ```{r}
@@ -56,6 +68,11 @@ lm1 <- lm(Fertility ~ . , data = swiss)
 lm2 <- update(lm1, . ~ . -Examination)
 
 AIC(lm1, lm2)
-BIC(lm1, lm2)
+
 ```
 
+
+
+```{r}
+BIC(lm1, lm2)
+```

@@ -1,0 +1,244 @@
+---
+title: "Cheddar Dataset"
+output: html_notebook
+---
+
+load library and dataset
+
+```{r}
+library(faraway)
+data("cheddar")
+```
+
+The second cell focuses on demonstrating how to calculate the Leave-One-Out Cross-Validation (LOO-CV) error for various linear regression models using the Cheddar dataset. This approach involves:
+
+1. Iteratively removing one observation from the dataset, using the remainder as the training set to fit different models, and then predicting the excluded observation's outcome. This process is repeated for each observation in the dataset.
+2. For each iteration, multiple models are fitted:
+    - Single predictor models for Acetic, H2S, and Lactic.
+    - Two-predictor models combining these variables in pairs.
+    - A three-predictor model using all available predictors.
+
+3. The Mean Squared Error (MSE) for each prediction is calculated and stored.
+4. After iterating through all observations, the average MSE for each model is computed and plotted to compare their predictive performance visually.
+
+# LOO-CV error curves for cheddar
+
+```{r}
+N <- nrow(cheddar)  # number of observations
+MSE_ace <- MSE_h2s <- MSE_lac <- MSE_3 <- vector(length=N)  #
+MSE_ace_h2s <- MSE_ace_lac <- MSE_h2s_lac <- Mean_3 <- vector(length=N)  #
+
+for(i in 1:N){
+  train_set <- cheddar[-i,]  # remove one observation
+  vali_set <- cheddar[i,]  # use the removed observation as the validation set
+
+  res_lm_ace <- lm(taste ~ Acetic, data=train_set)  # fit single predictor model for acetic
+  res_lm_h2s <- lm(taste ~ H2S, data=train_set)  # fit single predictor model for H2S
+  res_lm_lac <- lm(taste ~ Lactic, data=train_set)  # fit single predictor model for Lactic
+  res_lm2_ace_h2s <- lm(taste ~ Acetic + H2S, data=train_set)  # fit two-predictor model for acetic and H2S
+  res_lm2_ace_lac <- lm(taste ~ Acetic + Lactic, data=train_set)  # fit two-predictor model for acetic and Lactic
+  res_lm2_h2s_lac <- lm(taste ~ H2S + Lactic, data=train_set) # fit two-predictor model for H2S and Lactic
+  res_lm3_train <- lm(taste ~ Acetic + H2S + Lactic, data=train_set)  # fit three-predictor model for all predictors
+
+  pred_ace <- predict(res_lm_ace,vali_set)  # predict the validation set using the single predictor model for acetic
+  pred_h2s <- predict(res_lm_h2s,vali_set)  # predict the validation set using the single predictor model for H2S
+  pred_lac <- predict(res_lm_lac,vali_set)  # predict the validation set using the single predictor model for Lactic
+
+  pred_ace_h2s <- predict(res_lm2_ace_h2s,vali_set) # predict the validation set using the two-predictor model for acetic and H2S
+  pred_ace_lac <- predict(res_lm2_ace_lac,vali_set)  # predict the validation set using the two-predictor model for acetic and Lactic
+  pred_h2s_lac <- predict(res_lm2_h2s_lac,vali_set)  # predict the validation set using the two-predictor model for H2S and Lactic
+
+  pred_lm3 <- predict(res_lm3_train,vali_set)  # predict the validation set using the three-predictor model
+
+  MSE_ace[i] <- (vali_set[,1] - pred_ace)^2  # calculate the MSE for the single predictor model for acetic
+  MSE_h2s[i] <- (vali_set[,1] - pred_h2s)^2  # calculate the MSE for the single predictor model for H2S
+  MSE_lac[i] <- (vali_set[,1] - pred_lac)^2  # calculate the MSE for the single predictor model for Lactic
+
+  MSE_ace_h2s[i] <- (vali_set[,1] - pred_ace_h2s)^2  # calculate the MSE for the two-predictor model for acetic and H2S
+  MSE_ace_lac[i] <- (vali_set[,1] - pred_ace_lac)^2  # calculate the MSE for the two-predictor model for acetic and Lactic
+  MSE_h2s_lac[i] <- (vali_set[,1] - pred_h2s_lac)^2  # calculate the MSE for the two-predictor model for H2S and Lactic
+
+  MSE_3[i] <- (vali_set[,1] - pred_lm3)^2  # calculate the MSE for the three-predictor model
+}
+```
+
+```{r}
+models <- c("ace", "h2s", "lac", "ace_h2s", "ace_lac","h2s_lac", "3")  # collection of models
+```
+
+plot
+
+```{r}
+plot(c(mean(MSE_ace), mean(MSE_h2s), mean(MSE_lac),
+       mean(MSE_ace_h2s), mean(MSE_ace_lac), mean(MSE_h2s_lac),
+       mean(MSE_3)),
+       xaxt = "n", xlab="Models", ylab="MSE", col="red", type="b", pch=16)
+axis(1, at=1:7, labels=models)
+```
+
+
+# K-folds CV error curves for cheddar
+The third cell introduces the concept of k-folds Cross-Validation (CV) error calculation for the Cheddar dataset, with a focus on robustly evaluating the performance of different linear regression models. This approach involves:
+
+1. Dividing the dataset into m equally sized segments, or folds.
+2. Iteratively using each fold as a validation set and the remaining data as the training set to fit models and predict the validation set outcomes.
+3. Repeating this process nrep times with different random shuffles of the data to ensure the results are stable and not dependent on the particular split of the data.
+4. Calculating the Mean Squared Error (MSE) for predictions in each fold and iteration, then averaging across repetitions for each model.
+
+This method is more thorough than LOO-CV, as it tests model performance on multiple sets of data, reducing the variance in the estimation of model accuracy.
+
+```{r}
+N <- nrow(cheddar)
+m <- 5
+nrep <- 10
+MSE_mCV_ace <- MSE_mCV_h2s <- MSE_mCV_lac  <- matrix(nrow=nrep, ncol=m)
+MSE_mCV_ace_h2s <- MSE_mCV_ace_lac <- matrix(nrow=nrep, ncol=m)
+MSE_mCV_h2s_lac <- MSE_mCV_3 <- matrix(nrow=nrep, ncol=m)
+```
+
+
+```{r}
+for(i in 1:nrep){
+  set.seed(122+i)
+  shuffle_id <- sample(1:N, size=N, replace=F)
+  cheddar_new <- cheddar[shuffle_id,]
+  seq_id <- round(seq(0, N, by=N/m), 0)
+
+  for(j in 1:m){
+    test_id <- (seq_id[j]+1):seq_id[j+1]
+    train_set <- cheddar_new[-test_id,]
+    vali_set <- cheddar_new[test_id,]
+
+    res_lm_ace <- lm(taste ~ Acetic, data=train_set)
+    res_lm_h2s <- lm(taste ~ H2S, data=train_set)
+    res_lm_lac <- lm(taste ~ Lactic, data=train_set)
+    res_lm2_ace_h2s <- lm(taste ~ Acetic + H2S, data=train_set)
+    res_lm2_ace_lac <- lm(taste ~ Acetic + Lactic, data=train_set)
+    res_lm2_h2s_lac <- lm(taste ~ H2S + Lactic, data=train_set)
+    res_lm3_train <- lm(taste ~ Acetic + H2S + Lactic, data=train_set)
+
+    pred_ace <- predict(res_lm_ace,vali_set)
+    pred_h2s <- predict(res_lm_h2s,vali_set)
+    pred_lac <- predict(res_lm_lac,vali_set)
+
+    pred_ace_h2s <- predict(res_lm2_ace_h2s,vali_set)
+    pred_ace_lac <- predict(res_lm2_ace_lac,vali_set)
+    pred_h2s_lac <- predict(res_lm2_h2s_lac,vali_set)
+
+    pred_lm3 <- predict(res_lm3_train,vali_set)
+
+    MSE_mCV_ace[i,j] <- mean((vali_set[,1] - pred_ace)^2)
+    MSE_mCV_h2s[i,j] <- mean((vali_set[,1] - pred_h2s)^2)
+    MSE_mCV_lac[i,j] <- mean((vali_set[,1] - pred_lac)^2)
+
+    MSE_mCV_ace_h2s[i,j] <- mean((vali_set[,1] - pred_ace_h2s)^2)
+    MSE_mCV_ace_lac[i,j] <- mean((vali_set[,1] - pred_ace_lac)^2)
+    MSE_mCV_h2s_lac[i,j] <- mean((vali_set[,1] - pred_h2s_lac)^2)
+
+    MSE_mCV_3[i,j] <- mean((vali_set[,1] - pred_lm3)^2)
+
+  }
+  vals <- c(mean(MSE_mCV_ace[i,]), mean(MSE_mCV_h2s[i,]),
+            mean(MSE_mCV_lac[i,]), mean(MSE_mCV_ace_h2s[i,]),
+            mean(MSE_mCV_ace_lac[i,]), mean(MSE_mCV_h2s_lac[i,]),
+            mean(MSE_mCV_3[i,]))
+  if(i==1){
+    models <- c("ace", "h2s", "lac", "ace_h2s", "ace_lac","h2s_lac", "3")
+    plot(vals, xaxt="n", xlab="Models", ylab="MSE", col=i, type="b",
+         pch=16)
+    axis(1, at=1:7, labels=models)
+  }else{
+    points(vals, col=i, type="b", pch=16)
+  }
+}
+```
+
+The next cell in your workbook is focused on comparing different linear regression models using the AIC (Akaike Information Criterion), BIC (Bayesian Information Criterion), and Adjusted R-squared values. These metrics are crucial for model selection, helping to balance model fit with complexity:
+
+- **AIC and BIC**: Both are used to evaluate a model's performance considering the number of predictors. They penalize models for having more parameters, thus helping to avoid overfitting. Lower values indicate a better model fit relative to its complexity.
+
+- **Adjusted R-squared**: This is a modification of the R-squared value that adjusts for the number of predictors in the model, providing a more accurate measure of model performance. Higher values indicate a better fit.
+
+This step allows for a comprehensive evaluation of each model's predictive ability and complexity, guiding the selection of the most appropriate model for the data.
+
+```{r}
+library(faraway)
+data("cheddar")
+
+res_lm_ace <- lm(taste ~ Acetic, data=cheddar)
+res_lm_h2s <- lm(taste ~ H2S, data=cheddar)
+res_lm_lac <- lm(taste ~ Lactic, data=cheddar)
+res_lm2_ace_h2s <- lm(taste ~ Acetic + H2S, data=cheddar)
+res_lm2_ace_lac <- lm(taste ~ Acetic + Lactic, data=cheddar)
+res_lm2_h2s_lac <- lm(taste ~ H2S + Lactic, data=cheddar)
+res_lm3 <- lm(taste ~ ., data=cheddar)
+
+AIC <- AIC(res_lm_ace, res_lm_h2s, res_lm_lac, res_lm2_ace_h2s,
+           res_lm2_ace_lac, res_lm2_h2s_lac, res_lm3)
+BIC <- BIC(res_lm_ace, res_lm_h2s, res_lm_lac, res_lm2_ace_h2s,
+           res_lm2_ace_lac, res_lm2_h2s_lac, res_lm3)
+
+Adj.R2 <- vector(length=7)
+Adj.R2[1] <- summary(res_lm_ace)$adj.r.squared
+Adj.R2[2] <- summary(res_lm_h2s)$adj.r.squared
+Adj.R2[3] <- summary(res_lm_lac)$adj.r.squared
+
+Adj.R2[4] <- summary(res_lm2_ace_h2s)$adj.r.squared
+Adj.R2[5] <- summary(res_lm2_ace_lac)$adj.r.squared
+Adj.R2[6] <- summary(res_lm2_h2s_lac)$adj.r.squared
+Adj.R2[7] <- summary(res_lm3)$adj.r.squared
+
+models <- c("ace", "h2s", "lac", "ace_h2s", "ace_lac","h2s_lac", "3")
+
+plot(AIC$AIC, xaxt="n", xlab="Models", ylab="AIC", col=2, type="b", pch=16)
+axis(1, at=1:7, labels=models)
+
+plot(BIC$BIC, xaxt="n", xlab="Models", ylab="BIC", col=2, type="b", pch=16)
+axis(1, at=1:7, labels=models)
+
+plot(Adj.R2, xaxt="n", xlab="Models", ylab="Adjusted R-squared", col=2,
+     type="b", pch=16)
+axis(1, at=1:7, labels=models)
+```
+
+The following cells cover model refinement techniques using the Cheddar dataset. They demonstrate how to adjust a linear regression model by either adding or removing predictors to improve its predictive power:
+
+- **Backward elimination**: This technique starts with a full model that includes all potential predictors. It then systematically removes the least significant predictor, one at a time, to improve the model's performance based on a specific criterion, such as AIC or BIC. The drop1 function is used to evaluate the impact of removing each predictor.
+
+- **Forward selection**: This approach begins with the simplest model, usually containing no predictors, and adds predictors one at a time based on their statistical significance and contribution to the model's explanatory power. The add1 function is used to assess the potential improvement from adding each available predictor.
+
+These steps are essential for identifying the most effective model that balances complexity and predictive accuracy, utilising statistical tests to guide the selection process.
+
+# add one and drop one feature to model using Cheddar dataset
+drop 1 (backwards elimination)
+
+```{r}
+library(faraway)
+data("cheddar")
+
+cheddar.lm2 <- lm(taste~H2S+Lactic, cheddar) # backward elimination
+drop1(cheddar.lm2)
+```
+
+add 1 parameter to increase model complexity (forward selection)
+
+```{r}
+cheddar.lm <- lm(taste~1,cheddar)
+add1(cheddar.lm, scope=~Acetic+H2S+Lactic)
+```
+
+add a second parameter to increase model complexity (forward selection)
+
+```{r}
+cheddar.lm2 <- lm(taste~H2S,cheddar)
+add1(cheddar.lm2, scope=~Acetic+H2S+Lactic)
+```
+
+add a third additional parameter?
+
+```{r}
+cheddar.lm3 <- lm(taste~H2S+Lactic,cheddar)
+add1(cheddar.lm3, scope=~Acetic+H2S+Lactic)
+```
+
+no benefit from adding a 3rd additional parameter

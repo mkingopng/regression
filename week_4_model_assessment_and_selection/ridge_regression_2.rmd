@@ -1,0 +1,106 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+# Activity Ridge Regression 2
+In this exercise we will analyse the properties of the ridge regression through an application to the `credit` dataset available in the `ISLR` package in R.
+
+Load the dataset. Define the response vector by y and the design matrix X using the function `model.matrix()`. The function `model.matrix()` prepares the predictors to be included in the ridge regression via the `glmnet()` in the correct format (numerical or quantitative outputs only).
+
+
+```{r}
+library(ISLR)
+```
+
+1. Define a grid for the tuning parameter `λ`, ranging from `λ=10−2` to `λ=105` in decreasing order. Perform a ridge regression over the defined grid of λ values. This covers a range of scenarios from the null model containing only the intercept, to the least square fit. Use the function `plot(,xvar="lambda")` to plot the ridge regression coefficients for the predictor IncomeIncome as a function of `λ`.
+
+```{r}
+# question 1
+data("Credit")
+attach(Credit)
+
+Credit <- Credit[,-1]
+
+y <- Credit$Balance
+X <- model.matrix(Balance~., data=Credit)[,-1]
+```
+
+2. When λ is small, ridge regression gives similar answers to ordinary regression. Check this assertion by comparing the estimates for the ordinary regression and ridge regression with the smallest `λ` considered.
+
+```{r}
+# question 2
+library(glmnet)
+
+grid <- 10^seq(5,-2,length=100)
+ridge.mod <- glmnet(X,y, alpha=0, lambda=grid)
+
+plot(seq(5,-2,length=100),coef(ridge.mod)[2,], type="l",
+     ylab="Coefficient", xlab=expression(log(lambda)/log(10)))
+```
+
+3. When `λ` is large, ridge regression shrinks the parameter estimates when compared to the least squares estimates. Check this assertion by comparing the estimates for the ordinary regression and ridge regression with the largest `λ` considered.
+
+```{r}
+# question 3
+lm.mod <- lm(y~X)
+cbind(lm.mod$coefficients,coef(ridge.mod)[,100])
+```
+
+4. Split the data equally into training and test sets using `set.seed(1)`. When `λ` is small, we get only small improvement in the test error over linear regression, while when λ is large we see a definite improvement, λ cannot be too large though. Check this assertions by computing the test MSE for the ordinary regression and the ridge regression penalty parameter fixed to `λ=0.01,7` and 20
+
+```{r}
+# question 4
+cbind(lm.mod$coefficients,coef(ridge.mod)[,1])
+```
+
+5. In general, rather than arbitrarily choosing λ=7, it would be better to use cross-validation to choose the tuning parameter λ. We can do this using the built-in cross validation function `cv.glmnet()`. By default the function performs 10-fold cross-validation, though it can be changed using the argument `folds`. Use 5-fold cross validation to select the optimal tuning parameter `λ` and plot the output (MSE as function of log(λ)). What is the value of the tuning parameter than results in the smallest cross-validation error and what is the associated test MSE value? For reproducibility use `set.seed(2)`.
+
+```{r}
+# question 5
+set.seed(1)
+train <- sample(1:nrow(X),nrow(X)/2)
+test <- -train
+linear.mod <- lm(y[train]~X[train,])
+linear.pred <-  coef(linear.mod)[1]+X[test,] %*% coef(linear.mod)[-1]
+mean((linear.pred-y[test])^2)
+
+ridge.mod <- glmnet(X[train,], y[train], alpha=0, lambda=grid, thresh=1e-12)
+ridge.pred <- predict(ridge.mod, s=tail(grid,1), newx=X[test,])
+mean((ridge.pred-y[test])^2)
+
+ridge.pred <- predict(ridge.mod, s=7, newx=X[test,])
+mean((ridge.pred-y[test])^2)
+
+ridge.pred <- predict(ridge.mod, s=20, newx=X[test,])
+mean((ridge.pred-y[test])^2)
+```
+
+6. From the plot in the previous question, the λmin⁡ seems to be suspiciously close to the boundary of the search grid. We therefore decide to re-run the cross-validation algorithm using the search grid that we initially defined. Do you observe any changes? For reproducibility use `set.seed(2)`.
+
+```{r}
+# question 6
+set.seed(2)
+cv.out <- cv.glmnet(X[train,], y[train], alpha=0, nfolds=5)
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+bestlam
+
+ridge.pred <- predict(ridge.mod, s=bestlam, newx=X[test,])
+mean((ridge.pred-y[test])^2)
+```
+
+???
+
+```{r}
+# question 7
+set.seed(2)
+cv.out <- cv.glmnet(X[train,], y[train], alpha=0, lambda=grid, nfolds=5)
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+bestlam
+
+ridge.pred <- predict(ridge.mod, s=bestlam, newx=X[test,])
+mean((ridge.pred-y[test])^2)
+```
+
+

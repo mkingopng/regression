@@ -1,0 +1,55 @@
+---
+title: "Forward and Backward Stepwise Selection"
+output: html_notebook
+---
+# Activity in R: Forward and Backward Stepwise Selection
+Consider the `Hitters` dataset and use the `regsubsets()` function with the argument `method="forward"` or `method="backward"` to perform forward stepwise and backward stepwise selection. What is the best seven variable model?
+
+## solution
+```{r}
+library(ISLR)  # load the ISLR package
+library(leaps)  # load the leaps package
+
+data(Hitters)  # load the Hitters dataset
+```
+
+```{r}
+names(Hitters)  # names of the Hitters dataset
+```
+
+```{r}
+dim(Hitters)  # dimensions of the Hitters dataset
+```
+
+## Performing Forward Stepwise Selection:
+- The `regsubsets()` function is invoked with `method="forward"` to perform forward stepwise selection. This method starts with no variables in the model, adding the variable that provides the most significant improvement to the fit at each step, up to seven variables.
+
+```{r}
+regfit.fwd <- regsubsets(Salary~., data=Hitters, nvmax=19, method="forward")  # forward stepwise selection
+summary(regfit.fwd)  # summary of the forward stepwise selection
+```
+
+## Performing Backward Stepwise Selection:
+Similarly, `regsubsets()` is called with `method="backward"` to conduct backward stepwise selection. This approach begins with all variables included and sequentially removes the least significant variable, aiming to improve the model at each step, until the best seven-variable model is identified.
+
+```{r}
+regfit.bwd <- regsubsets(Salary~., data=Hitters, nvmax=19, method="backward")  # backward stepwise selection
+summary(regfit.bwd)  # summary of the backward stepwise selection
+```
+
+## Identifying the Best Seven-Variable Models:
+The best models from both approaches are compared based on criteria such as the adjusted R-squared, AIC, BIC, or the Cp statistic. The summary and coefficient functions help in understanding the variables included in these models and their coefficients.
+
+The best seven variable models identified by forward stepwise selection and backward stepwise selection are different and include the following variables:
+
+forward step coefficients
+
+```{r}
+coef(regfit.fwd,7)  # forward step coefficients
+```
+
+backwards step coefficients
+```{r}
+coef(regfit.bwd,7)  # backward step coefficients
+```
+

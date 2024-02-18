@@ -1,0 +1,78 @@
+---
+title: "Ridge RegressioN 1"
+output: html_notebook
+---
+
+# Activity in R: Ridge Regression 1
+The data set `hald` was first printed in the article by Woods, Steinour and Starke (1932), "Effect of Composition of Portland Cement on Heat Evolved during Hardening," Industrial and Engineering Chemistry, 24, pp. 1207-14.
+
+With these data we are interested in predicting the response yy (heat
+evolved in calories per gram of cement) in terms of the predictors `x1`, `x2`, `x3` and `x4`.
+
+Construct pairwise scatter plots of the predictor variables. Do you think multicollinearity is present in these data?
+
+Find the ridge estimators for the coefficients of the standardised predictors when `λ=0.02`, using ordinary least squares regression on an augmented dataset. We augment the standardized matrix `X` with `p` additional rows λIλI, and augment `y` with `p` zeros. By introducing artificial data having response value zero, the fitting procedure is forced to shrink the coefficients toward zero.
+
+Compare the parameter estimates with the estimates obtained from `glmnet()` function. Are they approximately the same? Note that to compare `glmnet()` to other methods authors of `glmnet()` suggest to standardise the response variable, too.
+
+
+```{r}
+hald<-read.table("data/hald.txt", header=T)
+```
+```{r}
+print(dim(hald))
+```
+
+
+```{r}
+pairs(hald)
+```
+
+
+```{r}
+cor(hald)
+```
+
+
+```{r}
+y<-(hald$y-mean(hald$y))/sqrt(var(hald$y))
+X<-as.matrix(hald[,-1])
+pmeans<-apply(X,2,mean)
+n<-length(y)
+pscale<-apply(X,2,var)
+pscale<-sqrt(pscale)
+matrix(rep(pmeans,times=n),nrow=n,byrow=T)
+```
+
+
+```{r}
+X1<-X-matrix(rep(pmeans,times=n),nrow=n,byrow=T)
+X2<-X1%*%diag(1/pscale)
+lambda<-0.02
+Xstar<-rbind(X2,sqrt(lambda)*diag(4))
+Xstar
+```
+```{r}
+ystar<-c(y,rep(0,times=4))
+ystar
+```
+
+```{r}
+haldridge.lm<-lm(ystar ~ Xstar-1)
+haldridge.lm$coef
+```
+```{r}
+mean(y)
+```
+
+```{r}
+library(glmnet)
+fit<-glmnet(X2,y, alpha=0,lambda=0.02,standardize=FALSE)
+
+bet.s<-fit$beta
+a0.s<-fit$a0
+
+bet.s
+a0.s
+```
+

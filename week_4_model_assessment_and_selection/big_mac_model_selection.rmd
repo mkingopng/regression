@@ -7,28 +7,34 @@ The `BigMac2003` data set can be found in the package `alr4` in R (source: Cook 
 
 The Big Mac hamburger is a simple commodity that can be used to study the inefficiency in currency exchange, see an article in the Economist.
 
+```{r}
+require(alr4)
+data(BigMac2003)
+head(BigMac2003)
+```
+
 # (a)
 Confirm that a log-transformation is appropriate for all variables which are measured in units of currency (minutes of labor).
 
+**Scatterplot matrix**: The pairs(BigMac2003) command creates a scatterplot matrix for all variables in the dataset. This is a preliminary step to visually inspect relationships between variables and check if a log-transformation might be necessary.
 
 ```{r}
-require(alr4)
-
-data(BigMac2003)
-head(BigMac2003)
-
 # (a)
-pairs(BigMac2003)
+pairs(BigMac2003)  # scatterplot matrix
+```
 
+**Log-transformation**: The log-transformation is applied to variables measured in units of currency and minutes of labor. This transformation is common in economic data analysis to linearize relationships, stabilize variance, and make the data more closely meet the assumptions of linear regression. The script log-transforms the response variable (BigMac) and several predictors (Bread, Rice, Bus, Apt, TeachGI, TeachNI) by applying the natural logarithm. This is done to prepare for regression analysis, assuming that relationships between the log-transformed variables are linear.
+
+```{r}
 data <- BigMac2003
-data$BigMac <- log(data$BigMac)
-data$Bread <- log(data$Bread)
-data$Rice <- log(data$Rice)
-data$Bus <- log(data$Bus)
-data$Apt <- log(data$Apt)
-data$TeachGI <- log(data$TeachGI)
-data$TeachNI <- log(data$TeachNI)
-pairs(data)
+data$BigMac <- log(data$BigMac)  # log-transform the response
+data$Bread <- log(data$Bread)  # log-transform the predictors
+data$Rice <- log(data$Rice)  # log-transform the predictors
+data$Bus <- log(data$Bus)  # log-transform the predictors
+data$Apt <- log(data$Apt)  # log-transform the predictors
+data$TeachGI <- log(data$TeachGI)  # log-transform the predictors
+data$TeachNI <- log(data$TeachNI)  # log-transform the predictors
+pairs(data)  #
 ```
 
 # (b)
@@ -36,72 +42,109 @@ Assume the log-price of a BigMac as the response and carry out a best-subset lin
 
 Compute the AIC, BIC, five- and tenfold cross-validation of prediction error for the best model and the full model. Discuss the results. (Hint: you may use the package "bestglm".)
 
+## Subset Selection
+- Loading the package: The require(bestglm) command loads the bestglm package, which is used for best subset selection.
+- Model selection: The bestglm(Xy, IC = "AIC") function is called to perform best subset selection based on the Akaike Information Criterion (AIC). The dataset Xy is prepared with the response variable as the last column.
+
+## Model Comparison
+- **Models**: Two models are fitted using the `glm()` function - the best model as per AIC from the subset selection and the full model using all predictors.
+- **Information criteria**: AIC and BIC values are computed for both models to assess their quality. Lower AIC/BIC values generally indicate a better model in terms of explaining the data while penalizing for complexity.
+
 ```{r}
 require(bestglm)
 
-Xy <- data[, c(2:10, 1)]
-bestfits <- bestglm(Xy, IC = "AIC")
-bestfits$BestModels
+# the bestglm function is used to perform best subset selection based on AIC and BIC
+Xy <- data[, c(2:10, 1)]  # The dataset Xy is prepared with the response variable as the last column.
+bestfits <- bestglm(Xy, IC = "AIC")  # best subset selection
+bestfits$BestModels  # best model for each size
 
-fit <- glm(BigMac~Bread+Rice+FoodIndex+TeachGI, data=data)
-fit2 <- glm(BigMac~., data=data)
+# two models are fitted using the glm function
+fit <- glm(BigMac~Bread+Rice+FoodIndex+TeachGI, data=data)  # best model
+fit2 <- glm(BigMac~., data=data)  # full model
 
-AIC(fit)
-BIC(fit)
-AIC(fit2)
-BIC(fit2)
+AIC(fit)  # aic for best model
+BIC(fit)  # bic for best model
 
+AIC(fit2)  # aic for full model
+BIC(fit2)  # bic for full model
+```
+
+## Cross-validation
+- **Purpose**: Cross-validation is performed to estimate the prediction error of the models. The cv.glm() function from the boot package is used for 5-fold and 10-fold cross-validation.
+- **Results**: The cv$delta and cv2$delta outputs give the estimated prediction errors for 5-fold and 10-fold cross-validation, respectively, for both the best model and the full model.
+
+```{r}
 require(boot)
+
 set.seed(1)
-cv <- cv.glm(data = data, glmfit = fit, K = 5)
+cv <- cv.glm(data = data, glmfit = fit, K = 5)  # 5-fold cross-validation
+
 set.seed(1)
-cv2 <- cv.glm(data = data, glmfit = fit, K = 10)
+cv2 <- cv.glm(data = data, glmfit = fit, K = 10)  # 10-fold cross-validation
 
 cv$delta
 cv2$delta
 
 set.seed(1)
-cv <- cv.glm(data=data, glmfit=fit2, K=5)
+cv <- cv.glm(data=data, glmfit=fit2, K=5)  # 5-fold cross-validation
+
 set.seed(1)
-cv2 <- cv.glm(data=data, glmfit=fit2, K=10)
+cv2 <- cv.glm(data=data, glmfit=fit2, K=10)  # 10-fold cross-validation
 
 cv$delta
 cv2$delta
 ```
 
-
 # (c)
 Compare the diagnostic plots for the chosen model and the full model, e.g. by overlaying each plot. Which cities are most influential for the fits? Are there any outliers?
 
-```{r}
-par(mfrow=c(1,2))
-plot(fit, which=1, main="best model")
-plot(fit2,which=1, main="full model")
+## Diagnostic Plots
+- **Comparison**: Diagnostic plots (residuals, Q-plots, etc.) for the best model and the full model are compared side-by-side. This helps identify any outliers or influential observations and assess the fit of the models.
+- **Influential cities**: By examining these plots, one can identify cities (observations) that significantly influence the regression fits.
 
+```{r}
+par(mfrow=c(1,2))  # set up the graphics
+plot(fit, which=1, main="best model")  # diagnostic plots
+plot(fit2,which=1, main="full model")  # diagnostic plots
+```
+
+```{r}
 par(mfrow=c(1,2))
 plot(fit, which=2, main="best model")
 plot(fit2,which=2, main="full model")
-
+```
+```{r}
 par(mfrow=c(1,2))
 plot(fit, which=3, main="best model")
 plot(fit2,which=3, main="full model")
-
+```
+```{r}
 par(mfrow=c(1,2))
 plot(fit, which=4, main="best model")
 plot(fit2,which=4, main="full model")
-
+```
+```{r}
 par(mfrow=c(1,2))
 plot(fit, which=5, main="best model")
 plot(fit2,which=5, main="full model")
 ```
 
 # (d)
-Assuming that it is unknown, give a confidence interval and a prediction interval for the price of a BigMac in Sydney. Which model do you suggest using for the prediction?
+Assuming that it is unknown, give a confidence interval and a prediction interval for the price of a Big Mac in Sydney. Which model do you suggest using for the prediction?
+
+## Prediction and Confidence Intervals
+
+- **Intervals**: Prediction and confidence intervals for the price of a Big Mac in Sydney are calculated using both the best model and the full model.
+- **Model suggestion**: The exercise ends with a comparison of the intervals provided by both models to decide which model might be more appropriate for prediction.
+
+This sequence of steps—log-transformation, model selection, validation, diagnostic checks, and prediction—is a comprehensive approach to regression analysis, showcasing various statistical techniques to arrive at a reliable model.
 
 ```{r}
 newdata <- data.frame(data[61, 2:10])
 fit <- lm(BigMac~Bread+Rice+FoodIndex+TeachGI, data=data)
+
 fit2 <- lm(BigMac~., data=data)
+
 pi1<-predict(fit,newdata,interval="predict")
 pi1
 
@@ -117,3 +160,27 @@ pi1[,3] - pi1[,2]
 pi2[,3] - pi2[,2]
 ```
 
+Based on the output provided from the last cell, you have prediction and confidence intervals for the price of a Big Mac in Sydney from both the best model (fit) and the full model (fit2). Let's break down what these intervals tell us:
+
+Prediction Interval (PI)
+- Best Model (fit): The prediction interval ranges from 2.343537 to 3.588744.
+- Full Model (fit2): The prediction interval is narrower, from 2.836003 to 3.096278.
+
+Confidence Interval (CI)
+- Best Model (fit): The confidence interval ranges from 2.315047 to 3.586864.
+    - Full Model (fit2): The confidence interval is narrower, from 2.795065 to 3.106846.
+
+Width of the Intervals
+- Prediction Interval Width:
+    - Best Model: 1.245207
+    - Full Model: 1.271817
+
+Which Model to Choose
+- Prediction Interval: The full model provides a narrower prediction interval compared to the best model. A narrower prediction interval suggests greater precision in predicting the price of a Big Mac in Sydney.
+- Confidence Interval: Similarly, the confidence interval of the full model is narrower than that of the best model, indicating more precise estimates of the mean response.
+
+The full model, despite potentially including more predictors and hence being more complex, offers tighter intervals, suggesting that its predictions are more precise for the price of a Big Mac in Sydney. However, choosing between the models also depends on other factors such as the overall fit, complexity, and the specific use case. In cases where prediction accuracy is paramount, and the additional complexity of the full model does not pose issues for interpretation or application, the full model seems to be the more appropriate choice based on the provided intervals.
+
+so we go with the full model
+
+Yet, it's important to balance model complexity against prediction accuracy. A model that is too complex might not generalize well to new data (overfitting). If the best model (selected based on AIC, for example) significantly simplifies the analysis without substantially widening the prediction and confidence intervals, it might still be preferred for its simplicity and interpretability, especially in contexts where the slight increase in interval width does not meaningfully impact decision-making.
