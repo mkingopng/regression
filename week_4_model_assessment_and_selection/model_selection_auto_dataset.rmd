@@ -1,0 +1,101 @@
+---
+title: "model selection and assessment using Auto dataset"
+output: html_notebook
+---
+# Exercise 1: model selection and assessment using Auto dataset
+Consider the Auto dataset from the `ISLR` package in R. We want to use
+cross-validation to estimate the test error that results from predicting
+`mpg` using polynomial functions of `horsepower`. We consider polynomials
+of order up to 7.
+
+1. Use the validation method 10 times, each time using a different equal
+  (random) split of the observations into training and validation sets.
+  Plot the resulting estimated test MSEs.
+2. Compute and plot the LOO-CV error curve (as function of the polynomial
+  degree).
+3. Run a 10-fold CV 10 times, each with different splits of the data.
+  Plot the resulting CV error curves.
+4. Reflect on 1 and 3 above and draw some conclusion about what you observe.
+
+For reproducibility, we set a seed that is equal to the repetition number
+`(set.seed(1),…,set.seed(10))`.
+
+```{r}
+library(ISLR)
+data(Auto)
+attach(Auto)
+```
+
+
+```{r}
+dim(Auto)  # the number of rows and columns in the dataset
+```
+
+
+```{r}
+N <- nrow(Auto)  # the number of rows in the dataset
+nrep <- 10  # the number of repititions
+MSE_vali <- matrix(NA,ncol=7,nrow=nrep)  # matrix to store the validation MSEs
+```
+
+i need to repeat it 10 times so i do a for loop
+
+```{r}
+for(i in 1:nrep){
+
+  set.seed(i)  # set the seed
+  test_id <- sample(1:N,size=N/2,replace=F)  # generate the test set
+  train_set <- Auto[-test_id,]  # generate the training set
+  vali_set <- Auto[test_id,]  # generate the validation set
+
+  # fit the polynomial models
+  res1 <- lm(mpg ~ horsepower, data=train_set)  # fit the linear model
+  res2 <- lm(mpg ~ poly(horsepower,2), data=train_set)  # fit the quadratic model
+  res3 <- lm(mpg ~ poly(horsepower,3), data=train_set)  # fit the cubic model
+  res4 <- lm(mpg ~ poly(horsepower,4), data=train_set)  # fit the 4th order model
+  res5 <- lm(mpg ~ poly(horsepower,5), data=train_set)  # fit the 5th order model
+  res6 <- lm(mpg ~ poly(horsepower,6), data=train_set)  # fit the 6th order model
+  res7 <- lm(mpg ~ poly(horsepower,7), data=train_set)  # fit the 7th order model
+
+  pred1 <- predict(res1,vali_set)  # predict the validation set using the linear model
+  pred2 <- predict(res2,vali_set)  # predict the validation set using the quadratic model
+  pred3 <- predict(res3,vali_set)  # predict the validation set using the cubic model
+  pred4 <- predict(res4,vali_set)  # predict the validation set using the 4th order model
+  pred5 <- predict(res5,vali_set)  # predict the validation set using the 5th order model
+  pred6 <- predict(res6,vali_set)  # predict the validation set using the 6th order model
+  pred7 <- predict(res7,vali_set)
+
+  MSE1 <- mean((test_id$mpg-pred1)*2)  # compute the validation MSE
+  MSE2 <- mean((test_id$mpg-pred2)*2)
+  MSE3 <- mean((test_id$mpg-pred3)*2)
+  MSE4 <- mean((test_id$mpg-pred4)*2)
+  MSE5 <- mean((test_id$mpg-pred5)*2)
+  MSE6 <- mean((test_id$mpg-pred6)*2)
+  MSE7 <- mean((test_id$mpg-pred7)*2)
+
+  MSE_vali[i,] <- c(MSE1,MSE2,MSE3,MSE4,MSE5,MSE6,MSE7)  # store the validation MSEs
+  if (i==1) {
+	plot(1:7,MSE_vali[i,],type="l",ylim=c(15,25),xlab="Polynomial degree",ylab="Validation MSE", pch=16, col=1, type="b", ylim=15,30)
+  } else {
+	points(1:7,MSE_vali[i,], col=i, pch=16, type="b")
+  }
+}
+```
+
+# b) LOO-CV error curve
+
+```{r}
+
+```
+
+# c) 10-fold CV error curve
+
+```{r}
+
+```
+
+# d) reflections
+
+```{r}
+
+```

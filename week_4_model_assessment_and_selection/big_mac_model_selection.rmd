@@ -1,0 +1,119 @@
+---
+title: "Big Mac Model selection"
+output: html_notebook
+---
+# model selection
+The `BigMac2003` data set can be found in the package `alr4` in R (source: Cook and Weisberg, “Applied Regression Including Computing and Graphics,” Wiley, 1999)
+
+The Big Mac hamburger is a simple commodity that can be used to study the inefficiency in currency exchange, see an article in the Economist.
+
+# (a)
+Confirm that a log-transformation is appropriate for all variables which are measured in units of currency (minutes of labor).
+
+
+```{r}
+require(alr4)
+
+data(BigMac2003)
+head(BigMac2003)
+
+# (a)
+pairs(BigMac2003)
+
+data <- BigMac2003
+data$BigMac <- log(data$BigMac)
+data$Bread <- log(data$Bread)
+data$Rice <- log(data$Rice)
+data$Bus <- log(data$Bus)
+data$Apt <- log(data$Apt)
+data$TeachGI <- log(data$TeachGI)
+data$TeachNI <- log(data$TeachNI)
+pairs(data)
+```
+
+# (b)
+Assume the log-price of a BigMac as the response and carry out a best-subset linear regression analysis.
+
+Compute the AIC, BIC, five- and tenfold cross-validation of prediction error for the best model and the full model. Discuss the results. (Hint: you may use the package "bestglm".)
+
+```{r}
+require(bestglm)
+
+Xy <- data[, c(2:10, 1)]
+bestfits <- bestglm(Xy, IC = "AIC")
+bestfits$BestModels
+
+fit <- glm(BigMac~Bread+Rice+FoodIndex+TeachGI, data=data)
+fit2 <- glm(BigMac~., data=data)
+
+AIC(fit)
+BIC(fit)
+AIC(fit2)
+BIC(fit2)
+
+require(boot)
+set.seed(1)
+cv <- cv.glm(data = data, glmfit = fit, K = 5)
+set.seed(1)
+cv2 <- cv.glm(data = data, glmfit = fit, K = 10)
+
+cv$delta
+cv2$delta
+
+set.seed(1)
+cv <- cv.glm(data=data, glmfit=fit2, K=5)
+set.seed(1)
+cv2 <- cv.glm(data=data, glmfit=fit2, K=10)
+
+cv$delta
+cv2$delta
+```
+
+
+# (c)
+Compare the diagnostic plots for the chosen model and the full model, e.g. by overlaying each plot. Which cities are most influential for the fits? Are there any outliers?
+
+```{r}
+par(mfrow=c(1,2))
+plot(fit, which=1, main="best model")
+plot(fit2,which=1, main="full model")
+
+par(mfrow=c(1,2))
+plot(fit, which=2, main="best model")
+plot(fit2,which=2, main="full model")
+
+par(mfrow=c(1,2))
+plot(fit, which=3, main="best model")
+plot(fit2,which=3, main="full model")
+
+par(mfrow=c(1,2))
+plot(fit, which=4, main="best model")
+plot(fit2,which=4, main="full model")
+
+par(mfrow=c(1,2))
+plot(fit, which=5, main="best model")
+plot(fit2,which=5, main="full model")
+```
+
+# (d)
+Assuming that it is unknown, give a confidence interval and a prediction interval for the price of a BigMac in Sydney. Which model do you suggest using for the prediction?
+
+```{r}
+newdata <- data.frame(data[61, 2:10])
+fit <- lm(BigMac~Bread+Rice+FoodIndex+TeachGI, data=data)
+fit2 <- lm(BigMac~., data=data)
+pi1<-predict(fit,newdata,interval="predict")
+pi1
+
+predict(fit,newdata,interval="confidence")
+
+pi2<-predict(fit2,newdata,interval="predict")
+pi2
+
+predict(fit2,newdata,interval="confidence")
+
+pi1[,3] - pi1[,2]
+
+pi2[,3] - pi2[,2]
+```
+

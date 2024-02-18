@@ -1,14 +1,17 @@
 ---
-title: "R Notebook"
+title: "Week 4 example notebook"
 output: html_notebook
 ---
-
-# FIGURE 4-2-3
 
 ```{r}
 library(faraway)
 data("cheddar")
+```
 
+
+# LOO-CV error curves for cheddar
+
+```{r}
 N <- nrow(cheddar)
 MSE_ace <- MSE_h2s <- MSE_lac <- MSE_3 <- vector(length=N)
 MSE_ace_h2s <- MSE_ace_lac <- MSE_h2s_lac <- Mean_3 <- vector(length=N)
@@ -47,6 +50,7 @@ for(i in 1:N){
 }
 
 models <- c("ace", "h2s", "lac", "ace_h2s", "ace_lac","h2s_lac", "3")
+
 plot(c(mean(MSE_ace), mean(MSE_h2s), mean(MSE_lac),
        mean(MSE_ace_h2s), mean(MSE_ace_lac), mean(MSE_h2s_lac),
        mean(MSE_3)),
@@ -54,11 +58,9 @@ plot(c(mean(MSE_ace), mean(MSE_h2s), mean(MSE_lac),
 axis(1, at=1:7, labels=models)
 ```
 
-# figure 4-2-5
-```{r}
-library(faraway)
-data("cheddar")
+# K-folds CV error curves for cheddar
 
+```{r}
 N <- nrow(cheddar)
 m <- 5
 nrep <- 10
@@ -71,7 +73,7 @@ for(i in 1:nrep){
   set.seed(122+i)
   shuffle_id <- sample(1:N, size=N, replace=F)
   cheddar_new <- cheddar[shuffle_id,]
-  seq_id <- c(round(seq(0,N,by=N/m),0))
+  seq_id <- round(seq(0, N, by=N/m), 0)
 
   for(j in 1:m){
     test_id <- (seq_id[j]+1):seq_id[j+1]
@@ -122,83 +124,21 @@ for(i in 1:nrep){
 }
 ```
 
-# activity: Cross Validation
+-------------------------------------------------------
+# activity: Cross Validation using mos
 
 ```{r}
-mos.df<-read.table("mos.df.txt", header=TRUE, quote="\"")
+
+mos.df<-read.table("data/mos_df.txt", header=TRUE, quote="\"")
 
 library(boot)
-glm.fit=glm(Maxtemp~., data=mos.df)
-cv.error=cv.glm(mos.df, glm.fit, K=10)$delta[1]
+glm.fit <- glm(Maxtemp~., data=mos.df)
+cv.error <- cv.glm(mos.df, glm.fit, K=10)$delta[1]
 cv.error
 ```
 
-Consider the AutoAuto dataset from the  ISLRISLR package in RR. We want to use cross-validation in order to estimate the test error that results from predicting mpgmpg using polynomial functions of horsepowerhorsepower. We  consider polynomials of order up to 77.
-
-    Use the validation method 1010 times, each time using a different equal (random) split of the observations into training and validation sets. Plot the resulting estimated test MSEs.
-
-    Compute and plot the LOOCV error curve (as function of the polynomial degree).
-
-    Run a 1010-fold CV 1010 times, each with different splits of the data. Plot the resulting CV error curves.
-
-    Reflect on 1. and 3. above and draw some conclusion about what you observe.
-
-For reproducibility we set a seed that is equal to the repetition number (set.seed(1),…,set.seed(10)set.seed(1),…,set.seed(10)).
-
-```{r}
-library(ISLR)
-data(Auto)
-attach(Auto)
-
-N <- nrow(Auto)
-nrep <- 10
-MSE_vali <- matrix(NA,ncol=7,nrow=nrep)
-
-for(i in 1:nrep){
-
-  set.seed(i)
-  test_id <- sample(1:N,size=N/2,replace=F)
-  train_set <- Auto[-test_id,]
-  vali_set <- Auto[test_id,]
-
-  res1 <- lm(mpg ~ horsepower, data=train_set)
-  res2 <- lm(mpg ~ poly(horsepower,2), data=train_set)
-  res3 <- lm(mpg ~ poly(horsepower,3), data=train_set)
-  res4 <- lm(mpg ~ poly(horsepower,4), data=train_set)
-  res5 <- lm(mpg ~ poly(horsepower,5), data=train_set)
-  res6 <- lm(mpg ~ poly(horsepower,6), data=train_set)
-  res7 <- lm(mpg ~ poly(horsepower,7), data=train_set)
-
-  pred1 <- predict(res1,vali_set)
-  pred2 <- predict(res2,vali_set)
-  pred3 <- predict(res3,vali_set)
-  pred4 <- predict(res4,vali_set)
-  pred5 <- predict(res5,vali_set)
-  pred6 <- predict(res6,vali_set)
-  pred7 <- predict(res7,vali_set)
-
-  MSE1 <- mean((vali_set$mpg - pred1)^2)
-  MSE2 <- mean((vali_set$mpg - pred2)^2)
-  MSE3 <- mean((vali_set$mpg - pred3)^2)
-  MSE4 <- mean((vali_set$mpg - pred4)^2)
-  MSE5 <- mean((vali_set$mpg - pred5)^2)
-  MSE6 <- mean((vali_set$mpg - pred6)^2)
-  MSE7 <- mean((vali_set$mpg - pred7)^2)
-
-  MSE_vali[i,] <- c(MSE1,MSE2,MSE3,MSE4,MSE5,MSE6,MSE7)
-
-  if(i==1){
-    plot(1:7, MSE_vali[i,], ylim=c(0,30), main="", xlab="Degree of Polynomial",
-         ylab="MSE", pch=16,col=1, type="b")
-  } else {
-    points(1:7, MSE_vali[i,], pch=16, col=i, type="b")
-  }
-  print(i)
-}
-```
-
-
-
+-------------------------------------------------------------------
+# Cheddar dataset
 
 ```{r}
 library(faraway)
@@ -241,134 +181,20 @@ plot(Adj.R2, xaxt="n", xlab="Models", ylab="Adjusted R-squared", col=2,
 axis(1, at=1:7, labels=models)
 ```
 
-# Activity in R: Model Selection
-Consider the swiss dataset in R including standardised fertility measure and socio-economic indicators for each of 4747 French-speaking provinces of Switzerland at about 18881888.
-head(swiss)
-             Fertility  Agriculture  Examination  Education  Catholic
-Courtelary        80.2         17.0           15         12      9.96
-Delemont          83.1         45.1            6          9     84.84
-Franches-Mnt      92.5         39.7            5          5     93.40
-Moutier           85.8         36.5           12          7     33.77
-Neuveville        76.9         43.5           17         15      5.16
-Porrentruy        76.1         35.3            9          7     90.57
-             Infant.Mortality
-Courtelary               22.2
-Delemont                 22.2
-Franches-Mnt             20.2
-Moutier                  20.3
-Neuveville               20.6
-Porrentruy               26.6
 
-Calculate AIC and BIC for the multiple regression model with FertilityFertility as a response and all other variables as explanatory variables.
+--------------------------------------------------------------------------
+# add one and drop one using Cheddar
 
-Additionally, consider a model with ExaminationExamination removed from the set of the explanatory variables. Compare the AIC and BIC for the simplified model and the full model.
-
-Hint: Use functions AIC()AIC() and BIC()BIC() for this exercise.
-
-# solution
-
-```{r}
-lm1 <- lm(Fertility ~ . , data = swiss)
-lm2 <- update(lm1, . ~ . -Examination)
-
-AIC(lm1, lm2)
-##     df      AIC
-## lm1  7 326.0716
-## lm2  6 325.2408
-
-BIC(lm1, lm2)
-##     df      BIC
-## lm1  7 339.0226
-## lm2  6 336.3417
-```
-
-
-```{r}
-head(swiss)
-
-lm1 <- lm(Fertility ~ . , data = swiss)
-lm2 <- update(lm1, . ~ . -Examination)
-
-AIC(lm1, lm2)
-BIC(lm1, lm2)
-```
-
-
-```{r}
-library(ISLR)
-names(Hitters)
-
-## [1] "AtBat"    "Hits"    "HmRun"  "Runs"   "RBI"
-## [6] "Walks"    "Years"   "CAtBat" "CHits"  "CHmRun"
-## [11] "CRuns"   "CRBI"    "CWalks" "League" "Division"
-## [16] "PutOuts" "Assists" "Errors" "Salary" "NewLeague"
-
-dim(Hitters)
-
-## [1] 322 20
-
-sum(is.na(Hitters$Salary))
-
-## [1] 59
-
-Hitters=na.omit(Hitters)
-dim(Hitters)
-
-## [1] 263 20
-
-sum(is.na(Hitters))
-
-## [1] 0
-```
-
-
-```{r}
-library(ISLR)
-library(leaps)
-regfit.full=regsubsets(Salary~., Hitters)
-summary(regfit.full)
-```
-
-
-```{r}
-library(ISLR)
-library(leaps)
-regfit.full=regsubsets(Salary~., Hitters, nvmax=19)
-reg.summary=summary(regfit.full)
-
-names(reg.summary)
-```
-
-```{r}
-library(ISLR)
-library(leaps)
-regfit.full=regsubsets(Salary~., Hitters, nvmax=19)
-reg.summary=summary(regfit.full)
-
-par(mfrow=c(2,2))
-plot(reg.summary$rss, xlab="Number of Variables", ylab="RSS", type="l")
-plot(reg.summary$adjr2, xlab="Number of Variables", ylab="Adjusted RSq", type="l")
-plot(reg.summary$cp, xlab="Number of Variables", ylab="Cp", type="l")
-plot(reg.summary$bic, xlab="Number of Variables", ylab="BIC", type="l")
-```
-
-
-```{r}
-library(ISLR)
-library(leaps)
-regfit.full=regsubsets(Salary~., Hitters, nvmax=19)
-coef(regfit.full,6)
-```
-
-
+drop 1
 ```{r}
 library(faraway)
 data("cheddar")
 
-cheddar.lm2 <- lm(taste~H2S+Lactic, cheddar)
+cheddar.lm2 <- lm(taste~H2S+Lactic, cheddar) # backward elimination
 drop1(cheddar.lm2)
 ```
 
+add 1 parameter to increase model complexity
 ```{r}
 library(faraway)
 data("cheddar")
@@ -377,7 +203,7 @@ cheddar.lm <- lm(taste~1,cheddar)
 add1(cheddar.lm, scope=~Acetic+H2S+Lactic)
 ```
 
-
+add a second parameter to increase model complexity
 ```{r}
 library(faraway)
 data("cheddar")
@@ -386,7 +212,7 @@ cheddar.lm2 <- lm(taste~H2S,cheddar)
 add1(cheddar.lm2, scope=~Acetic+H2S+Lactic)
 ```
 
-
+add a third additional parameter?
 ```{r}
 library(faraway)
 data("cheddar")
@@ -394,10 +220,13 @@ data("cheddar")
 cheddar.lm3 <- lm(taste~H2S+Lactic,cheddar)
 add1(cheddar.lm3, scope=~Acetic+H2S+Lactic)
 ```
+no benefit from adding a 3rd additional parameter
 
+----------------------------------------------------------------------
+# MOS EXAMPLE
 
 ```{r}
-mos.df <- read.table("/course/data/mos.df.txt", header=TRUE, quote='"')
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
 mos.lm <- lm(Maxtemp ~ ., mos.df)
 
 drop1(mos.lm, scope~Modst+Modsp+Modthik)
@@ -405,7 +234,7 @@ drop1(mos.lm, scope~Modst+Modsp+Modthik)
 
 
 ```{r}
-mos.df <- read.table("/course/data/mos.df.txt", header=TRUE, quote='"')
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
 mos2.lm <- lm(Maxtemp ~ Modsp + Modthik, mos.df)
 
 drop1(mos2.lm, scope~Modsp+Modthik)
@@ -413,46 +242,48 @@ drop1(mos2.lm, scope~Modsp+Modthik)
 
 
 ```{r}
-mos.df <- read.table("/course/data/mos.df.txt", header=TRUE, quote='"')
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
 mos.lm <- lm(Maxtemp~1,mos.df)
 add1(mos.lm,scope~Modst+Modsp+Modthik)
 ```
 
 
 ```{r}
-mos.df <- read.table("/course/data/mos.df.txt", header=TRUE, quote='"')
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
 mos2.lm <- lm(Maxtemp~Modthik,mos.df)
 add1(mos2.lm, scope~Modst+Modsp+Modthik)
 ```
 
+
 ```{r}
-mos.df <- read.table("/course/data/mos.df.txt", header=TRUE, quote='"')
+mos.df <- read.table("data/mos_df.txt", header=TRUE, quote='"')
 mos3.lm <- lm(Maxtemp~Modthik+Modsp,mos.df)
 add1(mos3.lm, scope~Modst+Modsp+Modthik)
 ```
 
-Activity in R: Forward and Backward Stepwise Selection
+---------------------------------------------------------------------
+# Activity in R: Forward and Backward Stepwise Selection
 
-Consider the HittersHitters dataset and use the regsubsets()regsubsets() function with the argument method="forward"method="forward" or method="backward"method="backward" to perform forward stepwise and backward stepwise selection. What is the best seven variable model?
+Consider the `Hitters` dataset and use the `regsubsets()` function with the argument `method="forward"` or `method="backward"` to perform forward stepwise and backward stepwise selection. What is the best seven variable model?
+
+# solution
 
 ```{r}
-
-```
-
-
-Solution:
-```
-regfit.fwd=regsubsets(Salary~., data=Hitters, nvmax=19, method="forward")
+regfit.fwd <- regsubsets(Salary~., data=Hitters, nvmax=19, method="forward")
 summary(regfit.fwd)
-regfit.bwd=regsubsets(Salary~., data=Hitters, nvmax=19, method="backward")
+regfit.bwd <- regsubsets(Salary~., data=Hitters, nvmax=19, method="backward")
 summary(regfit.bwd)
 ```
 
 The best seven variable models identified by forward stepwise selection and backward stepwise selection are different and include the following variables:
-```
+```{r}
 coef(regfit.fwd,7)
 coef(regfit.bwd,7)
 ```
+
+------------------------------------------------
+#
+
 
 ```{r}
 library(ISLR)
@@ -460,10 +291,10 @@ names(Hitters)
 dim(Hitters)
 
 library(leaps)
-regfit.fwd=regsubsets(Salary~., data=Hitters, nvmax=19, method="forward")
+regfit.fwd <- regsubsets(Salary~., data=Hitters, nvmax=19, method="forward")
 summary(regfit.fwd)
 
-regfit.bwd=regsubsets(Salary~., data=Hitters, nvmax=19, method="backward")
+regfit.bwd <- regsubsets(Salary~., data=Hitters, nvmax=19, method="backward")
 summary(regfit.bwd)
 
 coef(regfit.fwd,7)
@@ -472,6 +303,7 @@ coef(regfit.bwd,7)
 
 ```
 
+--------------------------------------------------------------------
 # example: hospital manpower data
 ```{r}
 require(bestglm)
@@ -484,37 +316,39 @@ data(manpower)
 require(bestglm)
 require(glmnet)
 
-x=as.matrix(manpower[,1:4])
-y=log(manpower$Hours)
-lambda=exp(seq(-6,6,0.2))
-fit=glmnet(x,y,alpha=0,lambda=lambda)
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
+fit <- glmnet(x, y, alpha=0, lambda=lambda)
 plot(fit,xvar="lambda",label=T)
 ```
 
+
 ```{r}
 require(bestglm)
 require(glmnet)
 
-x=as.matrix(manpower[,1:4])
-y=log(manpower$Hours)
-lambda=exp(seq(-6,6,0.2))
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
 
 set.seed(1) # For reproducibility
-cv.fit=cv.glmnet(x,y,alpha=0,nfolds=5,lambda=lambda)
+cv.fit <- cv.glmnet(x, y, alpha=0, nfolds=5, lambda=lambda)
 plot(cv.fit)
 ```
 
+
 ```{r}
 require(bestglm)
 require(glmnet)
 
-x=as.matrix(manpower[,1:4])
-y=log(manpower$Hours)
-lambda=exp(seq(-6,6,0.2))
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
 
 set.seed(1) # For reproducibility
-cv.fit=cv.glmnet(x,y,alpha=0,nfolds=5,lambda=lambda)
-lambda=cv.fit$lambda.min
+cv.fit <- cv.glmnet(x, y, alpha=0, nfolds=5, lambda=lambda)
+lambda <- cv.fit$lambda.min
 lambda
 ```
 
@@ -523,50 +357,51 @@ lambda
 require(bestglm)
 require(glmnet)
 
-x=as.matrix(manpower[,1:4])
-y=log(manpower$Hours)
-lambda=exp(seq(-6,6,0.2))
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
 
 set.seed(1) # For reproducibility
-cv.fit=cv.glmnet(x,y,alpha=0,nfolds=5,lambda=lambda)
-lambda=cv.fit$lambda.1se
+cv.fit <- cv.glmnet(x, y, alpha=0, nfolds=5, lambda=lambda)
+lambda <- cv.fit$lambda.1se
 lambda
 ```
 
+#
 
 ```{r}
 require(bestglm)
 require(glmnet)
 
-x=as.matrix(manpower[,1:4])
-y=log(manpower$Hours)
-lambda=exp(seq(-6,6,0.2))
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-6, 6, 0.2))
 
-fit=glmnet(x,y,alpha=0,lambda=lambda)
+fit <- glmnet(x, y, alpha=0, lambda=lambda)
 
 set.seed(1) # For reproducibility
-cv.fit=cv.glmnet(x,y,alpha=0,nfolds=5,lambda=lambda)
+cv.fit <- cv.glmnet(x, y, alpha=0, nfolds=5, lambda=lambda)
 
 fit$beta[,cv.fit$index[,1]]
 fit$a0[cv.fit$index[,1]]
 ```
 
-# Activity in R: Ridge Regression
+--------------------------------------------------------------------
+# Activity in R: Ridge Regression 1
 
-The data set haldhald was first printed in the article by Woods, Steinour and Starke (1932), "Effect of Composition of Portland Cement on Heat Evolved during Hardening," Industrial and Engineering Chemistry, 24, pp. 1207-14.
+The data set `hald` was first printed in the article by Woods, Steinour and Starke (1932), "Effect of Composition of Portland Cement on Heat Evolved during Hardening," Industrial and Engineering Chemistry, 24, pp. 1207-14.
 
-With these data we are interested in predicting the response yy (heat evolved in calories per gram of cement) in terms of the predictors x1x1, x2x2, x3x3 and x4x4.
+With these data we are interested in predicting the response yy (heat
+evolved in calories per gram of cement) in terms of the predictors `x1`, `x2`, `x3` and `x4`.
 
 Construct pairwise scatter plots of the predictor variables. Do you think multicollinearity is present in these data?
 
-Find the ridge estimators for the coefficients of the standardised predictors when λ=0.02λ=0.02, using ordinary least squares regression on an augmented dataset. We augment the standardized matrix XX with pp additional rows λIλ
+Find the ridge estimators for the coefficients of the standardised predictors when `λ=0.02`, using ordinary least squares regression on an augmented dataset. We augment the standardized matrix `X` with `p` additional rows λIλI, and augment `y` with `p` zeros. By introducing artificial data having response value zero, the fitting procedure is forced to shrink the coefficients toward zero.
 
-​I, and augment yy with pp zeros. By introducing artificial data having response value zero, the fitting procedure is forced to shrink the coefficients toward zero.
-
-Compare the parameter estimates with the estimates obtained from glmnet() function. Are they approximately the same? Note that to compare glmnet() to other methods authors of glmnet() suggest to standardise the response variable, too.
+Compare the parameter estimates with the estimates obtained from `glmnet()` function. Are they approximately the same? Note that to compare `glmnet()` to other methods authors of `glmnet()` suggest to standardise the response variable, too.
 
 ```{r}
-hald<-read.table("../data/hald.txt", header=T)
+hald<-read.table("data/hald.txt", header=T)
 
 print(dim(hald))
 
@@ -603,28 +438,55 @@ a0.s<-fit$a0
 
 bet.s
 a0.s
-
-
 ```
 
-Activity
+-----------------------------------------------------
 
-In this exercise we will analyse the properties of the ridge regression through an application to the creditcredit dataset available in the ISLRISLR package in RR.
+# Activity Ridge Regression 2
 
-    Load the dataset. Define the response vector by yy and the design matrix XX using the function model.matrix()model.matrix(). The function model.matrix()model.matrix() prepares the predictors to be included in the ridge regression via the glmnet()glmnet() in the correct format (numerical or quantitative outputs only).
+In this exercise we will analyse the properties of the ridge regression through an application to the `credit` dataset available in the `ISLR` package in R.
 
-    Define a grid for the tuning parameter λλ, ranging from λ=10−2λ=10−2 to λ=105λ=105 in decreasing order. Perform a ridge regression over the defined grid of λλ values. This covers a range of scenarios from the null model containing only the intercept, to the least square fit. Use the function plot(,xvar="lambda")plot(,xvar="lambda") to plot the ridge regression coefficients for the predictor IncomeIncome as a function of λλ.
+Load the dataset. Define the response vector by y and the design matrix X
+using the function `model.matrix()`. The function `model.matrix()` prepares the predictors to be included in the ridge regression via the `glmnet()` in the correct format (numerical or quantitative outputs only).
 
-    When λλ is small, ridge regression gives similar answers to ordinary regression. Check this assertion by comparing the estimates for the ordinary regression and ridge regression with the smallest λλ considered.
+1. Define a grid for the tuning parameter `λ`, ranging from `λ=10−2` to
+   `λ=105` in decreasing order. Perform a ridge regression over the defined
+   grid of λ values. This covers a range of scenarios from the null model
+   containing only the intercept, to the least square fit. Use the function
+   `plot(,xvar="lambda")` to plot the ridge regression coefficients for the
+   predictor IncomeIncome as a function of `λ`.
 
-    When λλ is large, ridge regression shrinks the parameter estimates when compared to the least squares estimates. Check this assertion by comparing the estimates for the ordinary regression and ridge regression with the largest λλ considered.
+2. When λ is small, ridge regression gives similar answers to ordinary
+   regression. Check this assertion by comparing the estimates for the
+   ordinary regression and ridge regression with the smallest `λ` considered.
 
-    Split the data equally  into training and test sets using set.seed(1)set.seed(1). When λλ  is small, we get only small improvement in the test error over linear regression, while when λλ is large we see a definite improvement, λλ cannot be too large though. Check this assertions by computing the test MSE for the ordinary regression and the ridge regression penalty parameter fixed to λ=0.01,7λ=0.01,7 and 2020.
+3. When `λ` is large, ridge regression shrinks the parameter estimates when
+   compared to the least squares estimates. Check this assertion by comparing
+   the estimates for the ordinary regression and ridge regression with the
+   largest `λ` considered.
 
-    In general, rather than arbitrarily choosing λ=7λ=7, it would be better to use cross-validation to choose the tuning parameter λλ. We can do this using the built-in cross validation function cv.glmnet()cv.glmnet(). By default the function performs 10-fold cross-validation, though it can be changed using the argument foldsfolds. Use 5-fold cross validation to select the optimal tuning parameter λλ and plot the output (MSE as function of log⁡(λ)log(λ)). What is the value of the tuning parameter than results in the smallest cross-validation error and what is the associated test MSE value? Fore reproducibility use set.seed(2)set.seed(2).
+4. Split the data equally into training and test sets using `set.seed(1)`.
+   When `λ` is small, we get only small improvement in the test error over
+   linear regression, while when λ is large we see a definite improvement, λ
+   cannot be too large though. Check this assertions by computing the test
+   MSE for the ordinary regression and the ridge regression penalty parameter
+   fixed to `λ=0.01,7` and 20
 
-    From the plot in the previous question, the λmin⁡λmin​ seems to be suspiciously close to the boundary of the search grid. We therefore decide to re-run the cross-validation algorithm using the search grid that we initially defined. Do you observe any changes? Fore reproducibility use set.seed(2)set.seed(2).
+5. In general, rather than arbitrarily choosing λ=7, it would be better to
+   use cross-validation to choose the tuning parameter λ. We can do this
+   using the built-in cross validation function `cv.glmnet()`. By default the
+   function performs 10-fold cross-validation, though it can be changed using
+   the argument `folds`. Use 5-fold cross validation to select the optimal
+   tuning parameter `λ` and plot the output (MSE as function of log(λ)). What
+   is the value of the tuning parameter than results in the smallest
+   cross-validation error and what is the associated test MSE value? For
+   reproducibility use `set.seed(2)`.
 
+6. From the plot in the previous question, the λmin⁡λmin​ seems to be
+   suspiciously close to the boundary of the search grid. We therefore decide
+   to re-run the cross-validation algorithm using the search grid that we
+   initially defined. Do you observe any changes? For reproducibility use
+   `set.seed(2)`.
 
 
 ```{r}
@@ -701,20 +563,20 @@ ridge.pred <- predict(ridge.mod, s=bestlam, newx=X[test,])
 mean((ridge.pred-y[test])^2)
 ```
 
-
+#
 
 ```{r}
 require(bestglm)
 require(glmnet)
 
 data(manpower)
-x=as.matrix(manpower[,1:4])
-y=log(manpower$Hours)
-lambda=exp(seq(-8.1,1,0.1))
-fit2=glmnet(x,y,alpha=1,lambda=lambda)
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-8.1, 1, 0.1))
+fit2 <- glmnet(x, y, alpha=1, lambda=lambda)
 
 set.seed(1) # For reproducibility
-cv.fit2=cv.glmnet(x,y,alpha=1,nfolds=5,lambda=lambda)
+cv.fit2 <- cv.glmnet(x, y, alpha=1, nfolds=5, lambda=lambda)
 plot(fit2,xvar="lambda",label=T)
 ```
 
@@ -725,24 +587,25 @@ require(bestglm)
 require(glmnet)
 
 data(manpower)
-x=as.matrix(manpower[,1:4])
-y=log(manpower$Hours)
-lambda=exp(seq(-8.1,1,0.1))
-fit2=glmnet(x,y,alpha=1,lambda=lambda)
+x <- as.matrix(manpower[, 1:4])
+y <- log(manpower$Hours)
+lambda <- exp(seq(-8.1, 1, 0.1))
+fit2 <- glmnet(x, y, alpha=1, lambda=lambda)
 
 set.seed(1) # For reproducibility
-cv.fit2=cv.glmnet(x,y,alpha=1,nfolds=5,lambda=lambda)
+cv.fit2 <- cv.glmnet(x, y, alpha=1, nfolds=5, lambda=lambda)
 plot(cv.fit2)
-bestlam=cv.fit2$lambda.min
+bestlam <- cv.fit2$lambda.min
 bestlam
 ```
 
+# Hitters dataset
 
 ```{r}
 library(ISLR)
-Hitters=na.omit(Hitters)
-x=model.matrix(Salary~., Hitters)[,-1]
-y=Hitters$Salary
+Hitters <- na.omit(Hitters)
+x <- model.matrix(Salary~., Hitters)[, -1]
+y <- Hitters$Salary
 ```
 
 
@@ -750,19 +613,19 @@ y=Hitters$Salary
 require(bestglm)
 require(glmnet)
 library(ISLR)
-Hitters=na.omit(Hitters)
-x=model.matrix(Salary~., Hitters)[,-1]
-y=Hitters$Salary
-lambda=exp(seq(-8.1,1,0.1))
+Hitters <- na.omit(Hitters)
+x <- model.matrix(Salary~., Hitters)[, -1]
+y <- Hitters$Salary
+lambda <- exp(seq(-8.1, 1, 0.1))
 
 set.seed(1)
-train=sample(1:nrow(x),nrow(x)/2)
-test=(-train)
-y.test=y[test]
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+y.test <- y[test]
 
 set.seed(1)
-cv.out=cv.glmnet(x[train,], y[train], alpha=0)
-bestlam=cv.out$lambda.min
+cv.out <- cv.glmnet(x[train,], y[train], alpha=0)
+bestlam <- cv.out$lambda.min
 bestlam
 
 ## From R3.6.0 or later
@@ -772,27 +635,28 @@ bestlam
 
 ```
 
+#
 
 ```{r}
 require(bestglm)
 require(glmnet)
 library(ISLR)
-Hitters=na.omit(Hitters)
-x=model.matrix(Salary~., Hitters)[,-1]
-y=Hitters$Salary
-lambda=exp(seq(-8.1,1,0.1))
+Hitters <- na.omit(Hitters)
+x <- model.matrix(Salary~., Hitters)[, -1]
+y <- Hitters$Salary
+lambda <- exp(seq(-8.1, 1, 0.1))
 
 set.seed(1)
-train=sample(1:nrow(x),nrow(x)/2)
-test=(-train)
-y.test=y[test]
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+y.test <- y[test]
 
 set.seed(1)
-cv.out=cv.glmnet(x[train,], y[train], alpha=0)
-bestlam=cv.out$lambda.min
+cv.out <- cv.glmnet(x[train,], y[train], alpha=0)
+bestlam <- cv.out$lambda.min
 
-ridge.mod=glmnet(x[train,], y[train], alpha=0)
-ridge.pred=predict(ridge.mod, s=bestlam, newx=x[test,])
+ridge.mod <- glmnet(x[train,], y[train], alpha=0)
+ridge.pred <- predict(ridge.mod, s=bestlam, newx=x[test,])
 mean((ridge.pred-y.test)^2)
 ```
 
@@ -801,21 +665,21 @@ mean((ridge.pred-y.test)^2)
 require(bestglm)
 require(glmnet)
 library(ISLR)
-Hitters=na.omit(Hitters)
-x=model.matrix(Salary~., Hitters)[,-1]
-y=Hitters$Salary
-lambda=exp(seq(-8.1,1,0.1))
+Hitters <- na.omit(Hitters)
+x <- model.matrix(Salary~., Hitters)[, -1]
+y <- Hitters$Salary
+lambda <- exp(seq(-8.1, 1, 0.1))
 
 set.seed(1)
-train=sample(1:nrow(x),nrow(x)/2)
-test=(-train)
-y.test=y[test]
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+y.test <- y[test]
 
 set.seed(1)
-cv.out=cv.glmnet(x[train,], y[train], alpha=0)
-bestlam=cv.out$lambda.min
+cv.out <- cv.glmnet(x[train,], y[train], alpha=0)
+bestlam <- cv.out$lambda.min
 
-out=glmnet(x,y,alpha=0)
+out <- glmnet(x, y, alpha=0)
 predict(out, type="coefficients",s=bestlam)[1:20,]
 ```
 
@@ -823,26 +687,26 @@ predict(out, type="coefficients",s=bestlam)[1:20,]
 require(bestglm)
 require(glmnet)
 library(ISLR)
-Hitters=na.omit(Hitters)
-x=model.matrix(Salary~., Hitters)[,-1]
-y=Hitters$Salary
-lambda=exp(seq(-8.1,1,0.1))
+Hitters <- na.omit(Hitters)
+x <- model.matrix(Salary~., Hitters)[, -1]
+y <- Hitters$Salary
+lambda <- exp(seq(-8.1, 1, 0.1))
 
 set.seed(1)
-train=sample(1:nrow(x),nrow(x)/2)
-test=(-train)
-y.test=y[test]
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+y.test <- y[test]
 
 set.seed(1)
-cv.out=cv.glmnet(x[train,], y[train], alpha=1)
-bestlam=cv.out$lambda.min
+cv.out <- cv.glmnet(x[train,], y[train], alpha=1)
+bestlam <- cv.out$lambda.min
 bestlam
 
 ## [1] 9.286955
 ## [1] 16.78016  before R 3.6.0
 
-lasso.mod=glmnet(x[train,], y[train], alpha=1)
-lasso.pred=predict(lasso.mod, s=bestlam, newx=x[test,])
+lasso.mod <- glmnet(x[train,], y[train], alpha=1)
+lasso.pred <- predict(lasso.mod, s=bestlam, newx=x[test,])
 mean((lasso.pred-y.test)^2)
 
 ## [1] 143668.8
@@ -854,26 +718,26 @@ mean((lasso.pred-y.test)^2)
 require(bestglm)
 require(glmnet)
 library(ISLR)
-Hitters=na.omit(Hitters)
-x=model.matrix(Salary~., Hitters)[,-1]
-y=Hitters$Salary
-lambda=exp(seq(-8.1,1,0.1))
+Hitters <- na.omit(Hitters)
+x <- model.matrix(Salary~., Hitters)[, -1]
+y <- Hitters$Salary
+lambda <- exp(seq(-8.1, 1, 0.1))
 
 set.seed(1)
-train=sample(1:nrow(x),nrow(x)/2)
-test=(-train)
-y.test=y[test]
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+y.test <- y[test]
 
 set.seed(1)
-cv.out=cv.glmnet(x[train,], y[train], alpha=1)
-bestlam=cv.out$lambda.min
+cv.out <- cv.glmnet(x[train,], y[train], alpha=1)
+bestlam <- cv.out$lambda.min
 
-out=glmnet(x,y,alpha=1)
+out <- glmnet(x, y, alpha=1)
 predict(out, type="coefficients",s=bestlam)[1:20,]
 ```
 
 # model selection
-The BigMac2003BigMac2003 data set can be found in the package alr4alr4 in R (source: Cook and Weisberg, “Applied Regression Including Computing and Graphics,” Wiley, 1999)
+The `BigMac2003` data set can be found in the package `alr4` in R (source: Cook and Weisberg, “Applied Regression Including Computing and Graphics,” Wiley, 1999)
 
 The Big Mac hamburger is a simple commodity that can be used to study the inefficiency in currency exchange, see an article in the Economist.
 
@@ -896,25 +760,25 @@ head(BigMac2003)
 # (a)
 pairs(BigMac2003)
 
-data=BigMac2003
-data$BigMac=log(data$BigMac)
-data$Bread=log(data$Bread)
-data$Rice=log(data$Rice)
-data$Bus=log(data$Bus)
-data$Apt=log(data$Apt)
-data$TeachGI=log(data$TeachGI)
-data$TeachNI=log(data$TeachNI)
+data <- BigMac2003
+data$BigMac <- log(data$BigMac)
+data$Bread <- log(data$Bread)
+data$Rice <- log(data$Rice)
+data$Bus <- log(data$Bus)
+data$Apt <- log(data$Apt)
+data$TeachGI <- log(data$TeachGI)
+data$TeachNI <- log(data$TeachNI)
 pairs(data)
 
 # (b)
 require(bestglm)
 
-Xy=data[,c(2:10,1)]
-bestfits=bestglm(Xy,IC = "AIC")
+Xy <- data[, c(2:10, 1)]
+bestfits <- bestglm(Xy, IC = "AIC")
 bestfits$BestModels
 
-fit=glm(BigMac~Bread+Rice+FoodIndex+TeachGI,data=data)
-fit2=glm(BigMac~.,data=data)
+fit <- glm(BigMac~Bread+Rice+FoodIndex+TeachGI, data=data)
+fit2 <- glm(BigMac~., data=data)
 
 AIC(fit)
 BIC(fit)
@@ -923,17 +787,17 @@ BIC(fit2)
 
 require(boot)
 set.seed(1)
-cv=cv.glm(data = data,glmfit = fit,K = 5)
+cv <- cv.glm(data = data, glmfit = fit, K = 5)
 set.seed(1)
-cv2=cv.glm(data = data,glmfit = fit,K = 10)
+cv2 <- cv.glm(data = data, glmfit = fit, K = 10)
 
 cv$delta
 cv2$delta
 
 set.seed(1)
-cv=cv.glm(data=data, glmfit=fit2, K=5)
+cv <- cv.glm(data=data, glmfit=fit2, K=5)
 set.seed(1)
-cv2=cv.glm(data=data, glmfit=fit2, K=10)
+cv2 <- cv.glm(data=data, glmfit=fit2, K=10)
 
 cv$delta
 cv2$delta
@@ -960,9 +824,9 @@ plot(fit, which=5, main="best model")
 plot(fit2,which=5, main="full model")
 
 # (d)
-newdata=data.frame(data[61,2:10])
-fit=lm(BigMac~Bread+Rice+FoodIndex+TeachGI,data=data)
-fit2=lm(BigMac~.,data=data)
+newdata <- data.frame(data[61, 2:10])
+fit <- lm(BigMac~Bread+Rice+FoodIndex+TeachGI, data=data)
+fit2 <- lm(BigMac~., data=data)
 pi1<-predict(fit,newdata,interval="predict")
 pi1
 
@@ -978,33 +842,34 @@ pi1[,3] - pi1[,2]
 pi2[,3] - pi2[,2]
 ```
 
-Solution
+# Solution
 
-a) Confirm that a log-transformation is appropriate for all variables which are measured in units of currency.
+# a)
+Confirm that a log-transformation is appropriate for all variables which are measured in units of currency.
 
 ```{r}
 require(alr4)
-
 data(BigMac2003)
 head(BigMac2003)
 
 # (a)
 pairs(BigMac2003)
 
-data=BigMac2003
-data$BigMac=log(data$BigMac)
-data$Bread=log(data$Bread)
-data$Rice=log(data$Rice)
-data$Bus=log(data$Bus)
-data$Apt=log(data$Apt)
-data$TeachGI=log(data$TeachGI)
-data$TeachNI=log(data$TeachNI)
+data <- BigMac2003
+data$BigMac <- log(data$BigMac)
+data$Bread <- log(data$Bread)
+data$Rice <- log(data$Rice)
+data$Bus <- log(data$Bus)
+data$Apt <- log(data$Apt)
+data$TeachGI <- log(data$TeachGI)
+data$TeachNI <- log(data$TeachNI)
 pairs(data)
 ```
 
 After the log-transformation of variables measured in units of currency, the pairs plot looks more linear.
 
-b) Assume the log-price of a BigMac as the response, and carry out a best-subset linear regression analysis. Compute the AIC, BIC, five- and tenfold cross-validation of prediction error for the best model and the full model. Discuss the results. (Hint: you may use the package bestglm.)
+# b)
+Assume the log-price of a BigMac as the response, and carry out a best-subset linear regression analysis. Compute the AIC, BIC, five- and tenfold cross-validation of prediction error for the best model and the full model. Discuss the results. (Hint: you may use the package bestglm.)
 
 bestglm() is the best subset selection using 'leaps' algorithm (Furnival and Wilson, 1974) or complete enumeration (Morgan and Tatar, 1972). Complete enumeration is used for the non-Gaussian and for the case where the input matrix contains factor variables with more than 2 levels. The best fit may be found using the information criterion IC: AIC, BIC, EBIC, or BICq. Alternatively, with IC=`CV' various types of cross-validation may be used.
 
@@ -1015,24 +880,24 @@ data(BigMac2003)
 head(BigMac2003)
 
 # (a)
-data=BigMac2003
-data$BigMac=log(data$BigMac)
-data$Bread=log(data$Bread)
-data$Rice=log(data$Rice)
-data$Bus=log(data$Bus)
-data$Apt=log(data$Apt)
-data$TeachGI=log(data$TeachGI)
-data$TeachNI=log(data$TeachNI)
+data <- BigMac2003
+data$BigMac <- log(data$BigMac)
+data$Bread <- log(data$Bread)
+data$Rice <- log(data$Rice)
+data$Bus <- log(data$Bus)
+data$Apt <- log(data$Apt)
+data$TeachGI <- log(data$TeachGI)
+data$TeachNI <- log(data$TeachNI)
 
 # (b)
 require(bestglm)
 
-Xy=data[,c(2:10,1)]
-bestfits=bestglm(Xy,IC = "AIC")
+Xy <- data[, c(2:10, 1)]
+bestfits <- bestglm(Xy, IC = "AIC")
 bestfits$BestModels
 
-fit=glm(BigMac~Bread+Rice+FoodIndex+TeachGI,data=data)
-fit2=glm(BigMac~.,data=data)
+fit <- glm(BigMac~Bread+Rice+FoodIndex+TeachGI, data=data)
+fit2 <- glm(BigMac~., data=data)
 
 AIC(fit)
 BIC(fit)
@@ -1041,23 +906,23 @@ BIC(fit2)
 
 require(boot)
 set.seed(1)
-cv=cv.glm(data = data,glmfit = fit,K = 5)
+cv <- cv.glm(data = data, glmfit = fit, K = 5)
 set.seed(1)
-cv2=cv.glm(data = data,glmfit = fit,K = 10)
+cv2 <- cv.glm(data = data, glmfit = fit, K = 10)
 
 cv$delta
 cv2$delta
 
 set.seed(1)
-cv=cv.glm(data=data, glmfit=fit2, K=5)
+cv <- cv.glm(data=data, glmfit=fit2, K=5)
 set.seed(1)
-cv2=cv.glm(data=data, glmfit=fit2, K=10)
+cv2 <- cv.glm(data=data, glmfit=fit2, K=10)
 
 cv$delta
 cv2$delta
 ```
 
-The bestglm() function identified 55 best models when the AIC was used as the information criterion.
+The bestglm() function identified 5 best models when the AIC was used as the information criterion.
 
 The best model with four predictors has AIC and BIC
 

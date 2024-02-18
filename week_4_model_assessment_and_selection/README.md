@@ -49,17 +49,90 @@
 
 
 ### Definition of Errors
-- the training set is used to fit the model is drawb from the joint distribution of x and y
-- using this data or set, we're going to predict the function y = f(x) to predict yhat
-- the training error quantifies the discrepancy or loss between the fitted value and the response value
+- the training set is used to fit the model is drawb from the joint 
+  distribution of x and y
+- using this data or set, we're going to predict the function y = f(x) to 
+  predict yhat
+- the training error quantifies the discrepancy or loss between the fitted 
+  value and the response value
 - the test is the expected value of the loss given the training data set. 
 - obtained by averaging the loss over all new data pairs drawn from p(x, y)
-- small error is desirable since yhat generalises well and yields small loss for new data
-- the expected error is the average of the generalisation error over all possible training sets
-- 
+- small error is desirable since yhat generalises well and yields small 
+  loss for new data
+- **expected error**: the average of the generalisation error over all 
+  possible training sets
+- **in sample error**: 
+- **optimism**: the difference between the in-sample error and the training error
+- average optimism: the expected value of the optimism
+
+### Cross Validation
+- the **test error** can be easily calculated if a designated test set is 
+  available. Unfortunately this is not usually the case
+- however, the **training error** can be easily calculated on the training dataset
+- cross-validation is a method for estimating the average test error using 
+  the training data
+- cross-validation is a popular method for estimating the average test error
+- we take the dataset and split it into k parts randomly, into the training 
+  and test set
+- the model is fit on the training set and tested on the test set
+- the resulting validation error is then averaged over the k test sets
+
+cross validation has two main drawbacks
+- the validation estimate of the test error rate can be very variable
+- only a part of the observations is used to fit the model, ie the sample 
+  size is reduced as a result of the split
+
+There are different types of cross-validation:
+- leave one out cross validation (LOO-CV): deals with the issue of the 
+  sample size being reduced, but it is computationally expensive. Exception 
+  is Least Squares Regression
+- k-fold (or m-fold) cross-validation (k-CV): the data is split into k 
+  roughly equal parts. The model is fit on k-1 parts and tested on the 
+  remaining part. This is repeated k times, each time a different part is 
+  used as the test set
+
+# Bootstrap
+The bootstrap is a widely applicable and powerful statistical tool that 
+can be used to quantify uncertainty associated with a statistical method. 
+As a cross-validation method, the bootstrap seeks to estimate the conditional 
+test error.
+The basic idea is to randomly draw n observations with replacement from the 
+training data, each sample is of the same size as the original data set.
+This is done B times, producing B bootstrap datasets. 
+We refit the model to each of the B datasets and examine the behaviour of 
+the fits.
+Leave one out bootstrap, works the same as LOO-CV.
+
+# information criteria
+When we compare different models, we would like to select the best, ie the 
+one leading to the lowest test error. 
+RSS and R2 are not suitable for this task because they are based on the 
+training sample and the training error can be a poor estimate of the test 
+error.
+
+To select the best model, we can:
+- estimate the test error directly through cross-validation
+- estimate the test error by adjustment of the training error
+
+Mallows Cp, AIC, BIC are examples of information criteria. We can use these 
+to adjust the training error for the model size.
+- **Cp** gives an estimate of error (in-sample prediction error) and is 
+  hence a criterion for model selection: choose model complexity with 
+  minimal Cp.
+- using **AIC**, which aims to minimise the generalisation error 
+  asymptotically for large N.
+- **AICc** is a corrected version of AIC for small sample sizes
+- **BIC** penalises complexity more strongly than AIC. The model with lowest 
+  BIC corresponds to the model with highest log-posterior probability 
+  assuming an indifferent prior
+
+# Variable selection
+
+
 
 # Questions:
-- why the emphasis on this metric in this course? I had the impression that RMSE was more popular?
+- why the emphasis on this metric in this course? I had the impression that 
+  RMSE was more popular?
 
 
 # text book

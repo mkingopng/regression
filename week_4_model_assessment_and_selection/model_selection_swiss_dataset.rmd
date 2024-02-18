@@ -1,0 +1,61 @@
+---
+title: "model selection swiss dataset"
+output: html_notebook
+---
+
+# Activity in R: Model Selection
+Consider the swiss dataset in R including standardised fertility measure and
+socio-economic indicators for each of 47 French-speaking provinces of
+Switzerland at about 1888 head(swiss)
+             Fertility  Agriculture  Examination  Education  Catholic
+Courtelary        80.2         17.0           15         12      9.96
+Delemont          83.1         45.1            6          9     84.84
+Franches-Mnt      92.5         39.7            5          5     93.40
+Moutier           85.8         36.5           12          7     33.77
+Neuveville        76.9         43.5           17         15      5.16
+Porrentruy        76.1         35.3            9          7     90.57
+             Infant.Mortality
+Courtelary               22.2
+Delemont                 22.2
+Franches-Mnt             20.2
+Moutier                  20.3
+Neuveville               20.6
+Porrentruy               26.6
+
+Calculate AIC and BIC for the multiple regression model with Fertility as a
+response and all other variables as explanatory variables.
+
+Additionally, consider a model with ExaminationExamination removed from the
+set of the explanatory variables. Compare the AIC and BIC for the simplified
+model and the full model.
+
+Hint: Use functions `AIC()` and `BIC()` for this exercise.
+
+# solution
+
+```{r}
+lm1 <- lm(Fertility ~ . , data = swiss)
+lm2 <- update(lm1, . ~ . -Examination)
+
+AIC(lm1, lm2)
+##     df      AIC
+## lm1  7 326.0716
+## lm2  6 325.2408
+
+BIC(lm1, lm2)
+##     df      BIC
+## lm1  7 339.0226
+## lm2  6 336.3417
+```
+
+
+```{r}
+head(swiss)
+
+lm1 <- lm(Fertility ~ . , data = swiss)
+lm2 <- update(lm1, . ~ . -Examination)
+
+AIC(lm1, lm2)
+BIC(lm1, lm2)
+```
+

@@ -1,0 +1,155 @@
+---
+title: "Exercise 2: Hitters dataset"
+output: html_notebook
+---
+# Exercise 2: Hitters dataset
+This exercise focuses on the best subset selection approach which considers
+all 2p possible regression equiations and identifies the subset of the
+predictors of a given size that maximises a measure of fit or minimises an
+information criterion.
+
+with a fixed number of terms in the regression model, all four criteria for
+evaluating a subset of predictor variables (R2 adjusted; AIC, AICc and BIC)
+agree that the best choice is the set of predictors with the smallest value
+of residual sum of squares.
+
+Note however, when comparison is across models with different numbers of
+predictors the four methods can give entirely different results.
+
+In this exercise we wish to predict a baseball players `Salary` by various
+statistics associated with performance in the previous year. We will use
+the `regsubsets()` function from the `R` package `leaps` to perform best
+subset selection by identifying the best model that contains a given number
+of predictors, where best is quantified using RSS
+
+Questions:
+    - a) load the hitters data and remove the NA values
+    - b) load the leaps package and use the `regsubsets()` and learn how to use
+    the function. Print the output of the variable selection when the aim is to
+    model the variable salary. What are the predictors contained in the best 2
+    variable model?
+    - c) the `summary` function also returns R2, RSS, R2 adjusted Cp and BIC
+    (hit: try typing `names(object)` where `object` is the object created by
+    the `summary()` function). Re-run the model selection ensuring that all
+    predictors are included `(nvmax=19)` and examine these by plotting them
+    (all except for R2) as a function of the number of variables. What is the
+    best model according to the R2 adjusted, Cp and BIC, and what is the
+    estimated regression equation?
+
+## a) solution
+
+```{r}
+library(ISLR)
+names(Hitters)
+
+## [1] "AtBat"    "Hits"    "HmRun"  "Runs"   "RBI"
+## [6] "Walks"    "Years"   "CAtBat" "CHits"  "CHmRun"
+## [11] "CRuns"   "CRBI"    "CWalks" "League" "Division"
+## [16] "PutOuts" "Assists" "Errors" "Salary" "NewLeague"
+```
+
+q: how many observations in the dataset?
+ans: 322
+
+q: how many predictors?
+ans: 20
+
+```{r}
+dim(Hitters)
+# [1] 322 20
+```
+
+how many are na?
+
+```{r}
+sum(is.na(Hitters$Salary))
+## [1] 59
+```
+
+remove the NAs
+
+```{r}
+Hitters <- na.omit(Hitters)
+dim(Hitters)
+## [1] 263 20
+```
+
+check how many NAs there are
+
+```{r}
+sum(is.na(Hitters))
+## [1] 0
+```
+
+## b) question
+load the leaps package and use the `regsubsets()` and learn how to use
+the function. Print the output of the variable selection when the aim is to
+model the variable salary. What are the predictors contained in the best 2
+variable model?
+
+## b solution
+we can look at which predictors are most important by using the `regsubsets()`
+
+```{r}
+library(ISLR)
+library(leaps)
+regfit.full <- regsubsets(Salary~., Hitters)
+summary(regfit.full)
+```
+
+# c) question:
+the `summary` function also returns R2, RSS, R2 adjusted Cp and BIC
+(hit: try typing `names(object)` where `object` is the object created by
+the `summary()` function). Re-run the model selection ensuring that all
+predictors are included `(nvmax=19)` and examine these by plotting them
+(all except for R2) as a function of the number of variables. What is the
+best model according to the R2 adjusted, Cp and BIC, and what is the
+estimated regression equation?
+
+# c) solution
+```{r}
+regfit.full <- regsubsets(Salary~., Hitters, nvmax=19)
+reg.summary <- summary(regfit.full)
+
+names(reg.summary)
+```
+
+examine by plotting them
+
+```{r}
+reg.summary <- summary(regfit.full)
+
+par(mfrow=c(2,2))
+plot(reg.summary$rss, xlab="Number of Variables", ylab="RSS", type="l")
+plot(reg.summary$adjr2, xlab="Number of Variables", ylab="Adjusted RSq", type="l")
+plot(reg.summary$cp, xlab="Number of Variables", ylab="Cp", type="l")
+plot(reg.summary$bic, xlab="Number of Variables", ylab="BIC", type="l")
+```
+
+adj R2
+- gives the beta hat vector for the estimated regression equation
+
+```{r}
+# which.max(reg.sum$adjr2)
+
+coef(regfit.full,11)
+```
+
+Mallows Cp
+- gives beta hat vector for the estimated regression equation
+
+```{r}
+# which.min(reg.sum$cp)
+
+coef(regfit.full, 10)
+```
+
+BIC
+- gives beta hat vector for the estimated regression equation
+
+```{r}
+# which.min(reg.sum$bic)
+
+coef(regfit.full, 6)
+```
+
