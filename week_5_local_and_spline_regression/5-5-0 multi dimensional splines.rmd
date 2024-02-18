@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+require(mgcv)
+
+galaxy <-read.delim("data/galaxy.dat", sep=",")
+
+fit <- gam(formula = velocity~s(east.west, north.south), data = galaxy)
+plot(fit)
+```
+
+Fits in higher dimensions may be calculated as well, but are not visualised as easily. Alternatively, a loess smooth can be fitted:
+
+```{r}
+galaxy <-read.delim("data/galaxy.dat", sep=",")
+require(mgcv)
+loc.lin.reg <- loess(formula = velocity ~ north.south + east.west, data = galaxy, span = 0.7, degree = 2, normalize = T, family = "gaussian")
+attach(galaxy)
+
+xgrid <- seq(min(north.south), max(north.south), length.out = 50)
+ygrid <- seq(min(east.west), max(east.west), length.out = 50)
+
+new.coords <- matrix(data = NA, nrow = 2500, ncol = 2)
+new.coords[, 1] <- as.vector(outer(rep(1, 50), xgrid))
+new.coords[, 2] <- as.vector(outer(ygrid, rep(1, 50)))
+
+new.coords <- as.data.frame(new.coords)
+names(new.coords) <- c("north.south", "east.west")
+
+Z <- predict(loc.lin.reg, newdata = new.coords)
+Z <- matrix(data = Z, ncol = 50)
+library(lattice)
+wireframe(Z, screen = list(z = 170, x = -60))
+```
+
+
+
+

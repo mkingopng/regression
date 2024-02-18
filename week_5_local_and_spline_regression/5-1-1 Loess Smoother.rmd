@@ -1,0 +1,41 @@
+---
+title: "Loess Smoother"
+output: html_notebook
+---
+
+# Activity in R: Loess Smoother
+Download the data set ethanol. The ethanol data frame contains 8 measurements generated in an experiment in which ethanol was burned in a single cylinder automobile test engine. The variables are `NOx` (a measure of the nitrogen oxides in the exhaust), `C` (compression ratio of an engine) and `E` (a measure of the richness of the air/ethanol mix used).
+
+```{r}
+ethanol<-read.table("data/ethanol.txt",header=T)
+attach(ethanol)
+```
+
+```{r}
+print(dim(ethanol))
+```
+
+```{r}
+head(ethanol)
+```
+
+(a) Do a scatterplot of `NOx` against `E`.
+After looking at the scatterplot you might suggest a polynomial regression model to capture the relationship between the response NOxNOx and the predictor `E`. Fit a quadratic regression model and superimpose the fitted curve on the scatterplot.
+
+```{r}
+plot(E, NOx)
+Esq<-E*E
+ethanol.lm<-lm(NOx~E+Esq)
+Egrid<-seq(from=min(E),to=max(E),length=50)
+
+new.data<-data.frame(E=Egrid,Esq=Egrid*Egrid)
+ethanol.pred<-predict(ethanol.lm,newdata=new.data)
+lines(Egrid,ethanol.pred,col=2)
+lines(loess.smooth(E,NOx,span=0.2),lty=2,col=3)
+```
+
+(b) Superimpose on the scatterplot in a) a suitable loess smooth. Do you think the smooth captures structure in the data that is missed by the quadratic regression model?
+
+```{r}
+
+```

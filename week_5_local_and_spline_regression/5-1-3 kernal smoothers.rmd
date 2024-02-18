@@ -1,0 +1,41 @@
+---
+title: "Kernel Smoothers"
+output: html_notebook
+---
+
+# Example: Kernel smoothing
+In this example we illustrate kernel smoothing for the diabetes data (with log(C.peptide) as the response and ageage as the predictor):
+
+```{r}
+diabetes <- read.table("data/diabetes.dat", header=TRUE, quote="\"")
+diabetes <- diabetes[order(diabetes$Age),]
+plot(diabetes$Age,log(diabetes$C.Peptide))
+lines(ksmooth(diabetes$Age,log(diabetes$C.Peptide), bandwidth=5.0, kernel="normal"))
+lines(ksmooth(diabetes$Age,log(diabetes$C.Peptide), bandwidth=2.0, kernel="normal"),
+      lty=2)
+title("Kernel smooth")
+legend("topleft",c("bandwidth=5", "bandwidth=2"),lty=1:2)
+```
+
+# Example: Local likelihood
+Recall the trade union data set, which we have used as an example for logistic regression. The package `locfit` fits a nonparametric logistic regression model as follows:
+
+```{r}
+trade.union <- read.table("data/tradeunion.dat", header = T)
+attach(trade.union)
+require(locfit)
+
+# locfit 1.5-9.4 	 2020-03-24
+
+fit <- locfit(union.member~lp(wage, nn=0.7, deg=2), data=trade.union, family="binomial")
+plot(fit,ylim = c(0,1),type='n',main="Trade Union Data")
+newxx <- seq(from = min(wage), to = max(wage), length.out = 100)
+newdat <- data.frame(wage=newxx)
+ypred <- predict(fit, newdat, se.fit = T)
+lines(newxx,ypred$fit)
+lines(newxx,ypred$fit-ypred$se.fit,lty=2)
+lines(newxx,ypred$fit+ypred$se.fit,lty=2)
+points(jitter(wage), union.member, main = "trade union data set", pch = 3)
+```
+
+

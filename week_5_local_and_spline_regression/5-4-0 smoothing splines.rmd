@@ -1,0 +1,71 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(SemiPar)
+data(fossil)
+attach(fossil)
+plot(age,strontium.ratio)
+```
+
+# Example:
+Generalized Cross-Validation
+
+```{r}
+plot(fossil,pch=1, main="smoothed fossil data")
+ss1 <- smooth.spline(fossil$age, fossil$strontium.ratio)
+ss2 <- smooth.spline(fossil$age, fossil$strontium.ratio, df = 4)
+ss3 <- smooth.spline(fossil$age, fossil$strontium.ratio, df = 25)
+xx <- seq(90, 130, length.out = 200)
+lines(predict(ss1,xx), col=2)
+lines(predict(ss2,xx), col=2,lty=2)
+lines(predict(ss3,xx), col=2,lty=3)
+```
+
+The following code shows the dependence of the GCV on the d.o.f.
+
+```{r}
+num.df <- 101
+df.grid<-seq(8,20,length=num.df)
+GCV <- rep(NA,num.df)
+n <- length(fossil$age)
+for (i in 1:num.df)
+{
+ fit    <- smooth.spline(fossil$strontium.ratio~fossil$age,df=df.grid[i])
+ RSS    <- sum((fossil$strontium.ratio-predict(fit,fossil$age)$y)^2)
+ GCV[i] <- (1/n)*RSS/(1-df.grid[i]/n)^2
+}
+
+plot(df.grid,GCV,type="l",xlab="degree of freedom", ylab="GCV")
+
+ind.min <- order(GCV)[1]
+lines(rep(df.grid[ind.min],2),c(min(GCV),max(GCV)))
+```
+
+The same result can be obtained by simply setting cv=FALSEcv=FALSE in smooth.splinesmooth.spline function:
+
+```{r}
+sp<-smooth.spline(fossil$age,fossil$strontium.ratio,cv=FALSE)
+sp$df
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+

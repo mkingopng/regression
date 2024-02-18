@@ -1,0 +1,74 @@
+---
+title: "5-6 Exercise 1"
+output: html_notebook
+---
+# Exercise 1
+In this exercise we follow the Lab notes from Section 7.8 of James et al. (2013), i.e. the ISLR book. We will skip Section 7.8.1 on polynomial regression and step functions but it is recommended to read through this section (combined with the course notes). Instead we focus on section 7.8.2 to learn how to fit regression splines, natural splines and smoothing splines.
+
+We will focus on the `Wage` dataset available in the R package `ISLR`
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+```
+
+1. Consider a spline regression to fit `wage` to `age` considering knots at 25, 40 and 60. Represent the estimated regression line for a sequence of age values of length 100 ranging from the minimum to the maximum observed values. Add a confidence interval using `±2` standard error.
+
+```{r}
+# q1
+fit <- lm(wage~bs(age, knots=c(25,40,60)), data=Wage)
+
+age.grid <- seq(from=min(age), to=max(age), length=100)
+pred <- predict(fit, newdata=list(age=age.grid), se=TRUE)
+
+plot(age, wage, col="gray")
+lines(age.grid, pred$fit, lwd=2)
+lines(age.grid, pred$fit + 2*pred$se, lty=2)
+lines(age.grid, pred$fit - 2*pred$se, lty=2)
+```
+
+2. How many basis function were used in the previous question? Now, instead of specifying the locations of the knots, use the `df` and `degree` arguments to specify a quadratic spline regression with 6 degrees of freedom. Fit the model and display it as in 1). Where were the knots located?
+
+```{r}
+# q2
+fit2 <- lm(wage~bs(age, df=6, degree=2), data=Wage)
+attr(bs(age, df=6), "knots", degree=2)
+# 20% 40% 60% 80%
+#  32  39  46  53
+pred2 <- predict(fit2, newdata=list(age=age.grid), se=TRUE)
+
+plot(age, wage, col="gray")
+lines(age.grid, pred2$fit, lwd=2)
+lines(age.grid, pred2$fit + 2*pred2$se, lty=2)
+lines(age.grid, pred2$fit - 2*pred2$se, lty=2)
+```
+
+3. Use the `ns()` function to fit a natural cubic spline with 6 degree of freedom. Superimpose it with the spline regression from 1). What is the main comment that you can make when comparing both models?
+
+```{r}
+# q3
+fit3 <- lm(wage~ns(age, df=6), data=Wage)
+pred3 <- predict(fit3, newdata=list(age=age.grid), se=TRUE)
+
+plot(age, wage, col="gray")
+lines(age.grid, pred$fit, lwd=2)
+lines(age.grid, pred$fit + 2*pred$se, lty=2)
+lines(age.grid, pred$fit - 2*pred$se, lty=2)
+lines(age.grid, pred3$fit, lwd=2, col="red")
+lines(age.grid, pred3$fit + 2*pred3$se, lty=2, col="red")
+lines(age.grid, pred3$fit - 2*pred3$se, lty=2, col="red")
+```
+
+4. Use the `smooth.spline()` function to fit a smoothing spline to the data. In the first place use the argument `df=16` allowing for a 16 degrees of freedom. In a second step, consider instead the argument `cv=TRUE` to use cross-validation to select the optimal degree of freedom. Display both fitted lines. What do the respective models do?
+
+```{r}
+# q4
+plot(age, wage, xlim=range(age), cex=0.5, col="darkgrey")
+title("Smoothing Spline")
+fit4 <- smooth.spline(age, wage, df=16)
+fit5 <- smooth.spline(age, wage, cv=TRUE)
+fit5$df
+lines(fit4, col="red", lwd=2)
+lines(fit5, col="blue", lwd=2)
+```

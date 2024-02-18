@@ -1,0 +1,26 @@
+---
+title: "Multi dimensional splines"
+output: html_notebook
+---
+
+# Activity in R: 3D visualisation
+Consider `the galaxy` dataset:
+
+Generate a plot of the three-dimensional point cloud east.west,north.south,velocityeast.west,north.south,velocity using the `cloud()` function in the `lattice` library in R.
+Generate a plot of the three-dimensional point cloud east.west,north.south,velocityeast.west,north.south,velocity using the `cloud()` function in the `lattice` library in R.
+
+```{r}
+galaxy <- read.csv("data/galaxy.dat")
+head(galaxy,n = 2)
+require("lattice")
+
+cloud(velocity ~ east.west + north.south,data = galaxy, pretty = T,screen = list(z = 170, x = -60))
+
+```
+
+
+```{r}
+
+```
+
+

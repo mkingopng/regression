@@ -1,0 +1,5 @@
+air<-read.table("air.txt",header=T)
+attach(air)
+plot(radiation,ozone)
+lines(loess.smooth(radiation,ozone),col=2)
+lines(ksmooth(radiation,ozone,bandwidth=100),lty=2,col=3)

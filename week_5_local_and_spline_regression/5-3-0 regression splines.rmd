@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Example:
+A linear spline with two knots (red) and 50 knots (green)
+
+```{r}
+library(SemiPar)
+require(splines)
+
+## Loading required package: splines
+
+data(lidar)
+attach(lidar)
+fit <- lm(logratio ~ bs(x = range, knots = c(550,600), degree = 1))
+fit2<- lm(logratio ~ bs(x = range,df = 51, degree = 1))
+plot(lidar, main = "LIDAR data")
+xpred <- seq(400,700, length.out = 200)
+lines(xpred, predict(fit, data.frame(range = xpred)),col=2,lwd=3)
+lines(xpred, predict(fit2, data.frame(range = xpred)),col=3,lty=2,lwd=3)
+```
+
+# Example:
+Natural spline (red) and ordinary spline (blue). In order to fit a natural spline, we use the `ns()` function as follows:
+
+```{r}
+library(ISLR)
+attach(Wage)
+library(splines)
+agelims <- range(age)
+age.grid <- seq(from=agelims[1], to=agelims[2])
+fit <- lm(wage~ns(age, df=4), data=Wage)
+fit2 <- lm(wage~bs(age, df=4), data=Wage)
+pred <- predict(fit, newdata=list(age=age.grid), se=T)
+pred2=predict(fit2,newdata=list(age=age.grid),se=T)
+plot(age,wage,col="grey")
+lines(age.grid,pred$fit,col="red",lwd=2)
+lines(age.grid,pred2$fit,col="blue", lwd=2)
+```
+

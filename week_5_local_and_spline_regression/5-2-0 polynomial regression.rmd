@@ -1,0 +1,167 @@
+---
+title: "Polynomial regression"
+output: html_notebook
+---
+
+# xample: Polynomial regression
+
+In this example we analyze the WageWage data from the `ISLR` library.
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+fit <- lm(wage~poly(age, 4, raw=T), data=Wage)
+coef(summary(fit))
+```
+
+There are several other equivalent ways of fitting this model:
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+fit2 <- lm(wage~age+I(age^2)+I(age^3)+I(age^4), data=Wage)
+coef(summary(fit2))
+```
+
+or
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+fit3=lm(wage~cbind(age,age^2,age^3,age^4),data=Wage)
+```
+
+
+
+```{r}
+
+```
+
+Let us now fit the degree-4 polynomial to `wage` as a function of `age` in the `Wage` dataset.
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+fit <- lm(wage~poly(age, 4, raw=T), data=Wage)
+attach(Wage)
+agelims <- range(age)
+age.grid <- seq(from=agelims[1], to=agelims[2])
+preds <- predict(fit, newdata=list(age=age.grid), se=TRUE)
+se.bands <- cbind(preds$fit+2*preds$se.fit, preds$fit-2*preds$se.fit)
+par(mfrow=c(1,1),mar=c(4.5,4.5,1,1),oma=c(0,0,4,0))
+plot(age,wage,xlim=agelims, cex=.5,col="darkgrey")
+title("Degree-4 Polynomial", outer=T)
+lines(age.grid, preds$fit, lwd=2, col="blue")
+matlines(age.grid, se.bands, lwd=1,col="blue",lty=4)
+```
+
+Below we also illustrate one way of choosing the degree of the polynomial to use. We now fit models ranging from linear to a degree-5 polynomial and use hypothesis tests to determine the simplest model which is sufficient to explain the relationship between `wage` and `age`.
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+fit.1 <- lm(wage~age, data=Wage)
+fit.2 <- lm(wage~poly(age, 2), data=Wage)
+fit.3 <- lm(wage~poly(age, 3), data=Wage)
+fit.4 <- lm(wage~poly(age, 4), data=Wage)
+fit.5 <- lm(wage~poly(age, 5), data=Wage)
+anova(fit.1,fit.2,fit.3,fit.4,fit.5)
+```
+
+The p-value corresponding to comparing linear `Model1` to the quadratic `Model2` is small indicating that a linear fit is not sufficient. The p-value corresponding to comparing `Model2` to `Model3` is also low indicating that `Model2` is not sufficient. The p-value corresponding to comparing `Model3` and `Model4` is greater than `0.05` indicating that there is no sufficient improvement in choosing degree-4 polynomial over the cubic polynomial. Hence the cubic polynomial appears to provide a reasonable fit to the data.
+
+Note that as an alternative to using ANOVA, we could choose the polynomial degree using cross-validation.
+
+# Example: polynomial logistic regression
+We consider a procedure for predicting whether an individual earns more than $250,000 per year.
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+fit <- glm(I(wage>250)~poly(age, 4), data=Wage, family=binomial)
+
+agelims=range(age)
+age.grid=seq(from=agelims[1], to=agelims[2])
+
+preds <- predict(fit, newdata=list(age=age.grid), se=T)
+pfit <- exp(preds$fit)/(1+exp(preds$fit))
+se.bands.logit <- cbind(preds$fit+2*preds$se.fit, preds$fit-2*preds$se.fit)
+se.bands <- exp(se.bands.logit)/(1+exp(se.bands.logit))
+```
+
+In order to directly compute the probabilities we select `type="response"` in `predict()` as follows:
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+fit <- glm(I(wage>250)~poly(age, 4), data=Wage, family=binomial)
+agelims <- range(age)
+age.grid <- seq(from=agelims[1], to=agelims[2])
+preds <- predict(fit, newdata=list(age=age.grid), se=T)
+pfit <- exp(preds$fit)/(1+exp(preds$fit))
+se.bands.logit <- cbind(preds$fit+2*preds$se.fit, preds$fit-2*preds$se.fit)
+se.bands <- exp(se.bands.logit)/(1+exp(se.bands.logit))
+
+preds <- predict(fit, newdata=list(age=age.grid), type="response", se=T)
+```
+
+For visualization we execute the following code:
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+fit <- glm(I(wage>250)~poly(age, 4), data=Wage, family=binomial)
+agelims <- range(age)
+age.grid <- seq(from=agelims[1], to=agelims[2])
+preds <- predict(fit, newdata=list(age=age.grid), se=T)
+pfit <- exp(preds$fit)/(1+exp(preds$fit))
+se.bands.logit <- cbind(preds$fit+2*preds$se.fit, preds$fit-2*preds$se.fit)
+se.bands <- exp(se.bands.logit)/(1+exp(se.bands.logit))
+
+preds <- predict(fit, newdata=list(age=age.grid), type="response", se=T)
+
+attach(Wage)
+
+## The following objects are masked from Wage (pos = 4):
+##
+## age, education, health, health ins, jobclass, logwage, maritl,
+## race, region, sex, wage, X, year
+
+plot(age, I(wage>250),xlim=agelims, type="n", ylim=c(0,0.2))
+points(jitter(age), I((wage>250)/5), cex=.5,pch="|",col="darkgrey")
+lines(age.grid,pfit, lwd=2, col="blue")
+matlines(age.grid, se.bands, lwd=1, col="blue", lty=4)
+```
+
+# Example: step functions
+This example illustrates how to fit a step function in R using `cut()`:
+
+```{r}
+library(ISLR)
+data("Wage")
+attach(Wage)
+
+table(cut(age,4))
+
+fit <- lm(wage~cut(age, 4), data=Wage)
+coef(summary(fit))
+```
+
+Note that the `cut()` function returns an ordered categorical variable and `lm()` function creates a set of dummy variables for use in the regression.
+

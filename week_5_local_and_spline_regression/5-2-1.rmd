@@ -1,0 +1,45 @@
+---
+title: "Polynomial regression"
+output: html_notebook
+---
+
+# Activity in R: Polynomial regression
+In this activity, you will further analyse the WageWage data set considered in this section.
+
+
+```{r}
+library(ISLR)
+library(boot)
+data("Wage")
+attach(Wage)
+```
+
+Perform polynomial regression to predict wage using age. Use cross-validation to select the optimal degree `d` for the polynomial.
+
+```{r}
+set.seed(1)
+cv.error <- rep(0, 10)
+for( i in 1:10 ){
+  glm.fit <- glm(wage ~ poly(age, i), data=Wage )
+  cv.error[i] <- cv.glm(Wage, glm.fit, K=10 )$delta[1]
+}
+
+plot( 1:10, cv.error, pch=19, type='b', xlab='degree of polynomial', ylab='CV estimate of the prediction error' )
+```
+
+What degree was chosen, and how does this compare to the results of hypothesis testing using ANOVA? Make a plot of the resulting polynomial fit to the data.
+
+```{r}
+me <- which.min(cv.error )
+me
+```
+
+```{r}
+m <- glm(wage ~ poly(age, me), data=Wage )
+
+plot( Wage$age, Wage$wage )
+aRng <- range(Wage$age)
+a_predict <- seq(from=aRng[1], to=aRng[2], length.out=100 )
+w_predict <- predict(m, newdata=list(age=a_predict ) )
+lines( a_predict, w_predict, col='red' )
+```

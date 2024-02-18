@@ -1,0 +1,23 @@
+---
+title: "Smoothing Spline"
+output: html_notebook
+---
+
+# Activity in R: Smoothing spline
+Recall the WageWage data set in the library `ISLR`. Visualise age vs wage using a scatterplot. Fit a smoothing spline using the `smooth.spline()` function in R. Compare two methods of fitting the smoothing spline: one of them is by providing `df=16` and the second one by using cross-validation `cv=TRUE`. Add the visualisation of both fitted splines onto the scatterplot. Explain how the fit is obtained in both cases.
+
+```{r}
+Wage<-read.csv("data/Wage.csv",header=T)
+library(ISLR)
+attach(Wage)
+agelims <- range(age)
+plot(age,wage,xlim=agelims, cex=.5,col="darkgrey")
+title("Smoothing spline")
+fit <- smooth.spline(age, wage, df=16)
+fit2 <- smooth.spline(age, wage, cv=TRUE)
+fit2$df
+lines(fit,col="red",lwd=2)
+lines(fit2,col="blue",lwd=2)
+legend("topright",legend=c("16 DF","6.8 DF"),col=c("red","blue"),lty=1,lwd=2,cex=.8)
+```
+
